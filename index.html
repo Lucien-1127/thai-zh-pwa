@@ -554,7 +554,10 @@ main {
 <!-- ===== SETTINGS PANEL ===== -->
 <div class="overlay" id="settings" onclick="if(event.target===this)closeSettings()">
   <div class="panel" onclick="event.stopPropagation()">
-    <div class="panel-title">⚙️ 設定</div>
+    <div class="panel-title">
+      <span>⚙️ 設定</span>
+      <button class="icon-btn" style="margin-left:auto;font-size:18px;width:36px;height:36px" onclick="closeSettings()">✕</button>
+    </div>
 
     <div class="panel-group">
       <label class="panel-label">翻譯引擎</label>
@@ -666,7 +669,7 @@ const SYSTEM_PROMPT = `[ROLE]
 
 // --- State ---
 let savedKey = {
-  gemini: localStorage.getItem('gemini_api_key') || '',
+  gemini: localStorage.getItem('gemini_api_key') || 'AIzaSyDkASg8yJQEuY66VHMqhAAGQo6WYtHUdHU',
   agnes: localStorage.getItem('agnes_api_key') || ''
 };
 let activeProvider = localStorage.getItem('active_provider') || 'gemini';
@@ -879,6 +882,7 @@ function saveKey() {
     savedKey[activeProvider] = '';
     showKeyStatus('金鑰已清除', 'ok');
   }
+  setTimeout(() => closeSettings(), 800);
 }
 async function verifyKey() {
   const key = $('apikey').value.trim();
