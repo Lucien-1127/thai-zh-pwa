@@ -2,50 +2,102 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<!-- PWA: iOS -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TH↔ZH">
+<meta name="apple-mobile-web-app-title" content="泰文翻譯">
 <link rel="apple-touch-icon" href="icon-192.png">
-<!-- PWA: general -->
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="description" content="泰文翻譯繁體中文 — 專業泰國本地用語即時翻譯">
-<title>แปลไทย → 中文</title>
+<meta name="description" content="泰文轉繁體中文翻譯工具">
+<title>泰文翻譯 — Thai to Chinese</title>
 <style>
-/* === RESET === */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* ========================================
+   Thai → ZH-TW Translator PWA v3
+   繁體中文介面 · 深色/淺色 · 手勢優化
+   ======================================== */
 
-/* === VARIABLES === */
+/* --- Reset --- */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+/* --- Variables (Dark Default) --- */
 :root {
-  --bg: #111827;
-  --surface: #1f2937;
-  --border: #374151;
-  --text: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-hover: #334155;
+  --border: #334155;
+  --border-focus: #818cf8;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --accent: #818cf8;
+  --accent-hover: #6366f1;
+  --accent-subtle: rgba(129,140,248,0.12);
   --error: #f87171;
-  --error-bg: #450a0a;
-  --radius: 12px;
+  --error-bg: rgba(248,113,113,0.1);
+  --success: #34d399;
+  --success-bg: rgba(52,211,153,0.1);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 
-/* === BASE === */
+/* --- Light Mode --- */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-focus: #818cf8;
+    --text: #0f172a;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-subtle: rgba(99,102,241,0.08);
+    --error: #dc2626;
+    --error-bg: rgba(220,38,38,0.06);
+    --success: #059669;
+    --success-bg: rgba(5,150,105,0.06);
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+}
+
+/* --- Base --- */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
 body {
-  font-family: -apple-system, 'Noto Sans Thai', 'Noto Sans TC', 'PingFang TC', sans-serif;
+  font-family: -apple-system, 'Noto Sans TC', 'PingFang TC', 'Noto Sans Thai', sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  -webkit-font-smoothing: antialiased;
-  /* safe area for notch phones */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  transition: background .3s, color .3s;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* === HEADER (App Shell) === */
+/* --- Offline Banner --- */
+#offline-banner {
+  display: none;
+  background: linear-gradient(135deg, #78350f, #92400e);
+  color: #fde68a;
+  text-align: center;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+#offline-banner.show { display: block; }
+
+/* --- App Bar --- */
 .app-bar {
   display: flex;
   align-items: center;
@@ -53,28 +105,41 @@ body {
   padding: 12px 16px;
   padding-top: calc(12px + env(safe-area-inset-top));
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg);
+  transition: border-color .3s;
   -webkit-user-select: none;
   user-select: none;
-  flex-shrink: 0;
 }
-.app-bar__title {
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+.app-bar-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
-.app-bar__title span { color: var(--text-secondary); }
-.app-bar__actions { display: flex; gap: 4px; }
+.app-bar-title .arrow { color: var(--text-tertiary); margin: 0 6px; }
+
+/* --- Icon Button --- */
 .icon-btn {
-  background: none; border: none; color: var(--text-secondary);
-  font-size: 22px; padding: 6px 8px; cursor: pointer;
-  border-radius: 8px; transition: background .15s;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s;
   -webkit-tap-highlight-color: transparent;
 }
-.icon-btn:active { background: var(--surface); }
+.icon-btn:active { background: var(--accent-subtle); color: var(--accent); }
 
-/* === MAIN CONTENT === */
+/* --- Main --- */
 main {
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   display: flex;
@@ -82,305 +147,448 @@ main {
   gap: 12px;
 }
 
-/* === TEXTAREA === */
+/* --- Card (Surface) --- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: background .3s, border-color .3s;
+}
+
+/* --- Input Area --- */
 .input-area {
   position: relative;
 }
-textarea {
+.input-area textarea {
   width: 100%;
-  min-height: 180px;
+  min-height: 160px;
+  max-height: 50vh;
   resize: vertical;
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   padding: 16px;
+  padding-bottom: 28px;
   font-size: 16px;
   line-height: 1.7;
   font-family: inherit;
   outline: none;
-  transition: border-color .2s;
+  transition: border-color .2s, background .3s;
 }
-textarea:focus { border-color: var(--accent); }
-textarea::placeholder { color: #6b7280; }
-
-.char-count {
+.input-area textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+.input-area textarea::placeholder { color: var(--text-tertiary); }
+.input-meta {
   position: absolute;
-  bottom: 10px;
-  right: 12px;
+  bottom: 8px;
+  right: 10px;
   font-size: 11px;
-  color: #6b7280;
+  color: var(--text-tertiary);
   pointer-events: none;
 }
 
-/* === TRANSLATE BUTTON === */
-.btn {
+/* --- Translate Button --- */
+.btn-translate {
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   font-size: 17px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform .15s, opacity .2s;
-  -webkit-tap-highlight-color: transparent;
+  background: var(--accent);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: background .2s, transform .12s, opacity .2s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
 }
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-.btn-primary:active { transform: scale(0.97); }
-.btn:disabled {
+.btn-translate:active { transform: scale(0.97); }
+.btn-translate:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
+.btn-translate .label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-translate .shortcut-hint {
+  font-size: 12px;
+  opacity: 0.6;
+  font-weight: 400;
+}
+@media (hover: hover) {
+  .btn-translate:hover { background: var(--accent-hover); }
+}
 
-/* === LOADING === */
+/* --- Loading --- */
 #loading {
   display: none;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 16px;
+  gap: 10px;
+  padding: 20px;
   color: var(--text-secondary);
   font-size: 14px;
 }
 #loading.show { display: flex; }
-.spinner {
-  width: 18px; height: 18px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
+.loading-dots {
+  display: flex;
+  gap: 4px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+.loading-dots span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dotBounce 1.4s ease-in-out infinite both;
+}
+.loading-dots span:nth-child(1) { animation-delay: 0s; }
+.loading-dots span:nth-child(2) { animation-delay: 0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.32s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
 
-/* === ERROR === */
+/* --- Error --- */
 #error {
   display: none;
   background: var(--error-bg);
-  color: var(--error);
-  border: 1px solid #7f1d1d;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   padding: 12px 16px;
-  border-radius: var(--radius);
   font-size: 14px;
   line-height: 1.5;
+  color: var(--error);
+  animation: fadeSlideIn .25s ease;
 }
 #error.show { display: block; }
 
-/* === RESULT === */
+/* --- Result --- */
 #result {
   display: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   padding: 16px;
+  padding-top: 14px;
+  animation: fadeSlideIn .3s ease;
+  position: relative;
+}
+#result.show { display: block; }
+#result .result-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+#result .result-text {
   font-size: 16px;
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
-  position: relative;
+  color: var(--text);
 }
-#result.show { display: block; }
-
-.copy-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: var(--border);
+#result .result-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.result-btn {
+  background: var(--surface-hover);
   border: none;
   color: var(--text-secondary);
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity .2s;
+  transition: background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-#result:hover .copy-btn,
-.copy-btn:focus { opacity: 1; }
+.result-btn:active { background: var(--accent-subtle); color: var(--accent); }
 
-/* === OFFLINE BANNER === */
-#offline-banner {
-  display: none;
-  background: #78350f;
-  color: #fbbf24;
-  text-align: center;
-  padding: 6px;
-  font-size: 12px;
-  flex-shrink: 0;
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-#offline-banner.show { display: block; }
 
-/* === FOOTER === */
+/* --- Footer --- */
 .footer {
   text-align: center;
-  padding: 12px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
   font-size: 11px;
-  color: #6b7280;
+  color: var(--text-tertiary);
   flex-shrink: 0;
+  border-top: 1px solid var(--border);
 }
 
-/* === SETTINGS PANEL === */
+/* ================================================
+   SETTINGS PANEL
+   ================================================ */
 .overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.5);
   z-index: 100;
   justify-content: center;
   align-items: flex-end;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .overlay.show { display: flex; }
 .panel {
   background: var(--surface);
   width: 100%;
-  max-width: 480px;
-  border-radius: 16px 16px 0 0;
+  max-width: 500px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 24px;
-  animation: slideUp .25s ease;
+  animation: panelUp .3s ease;
   max-height: 85vh;
   overflow-y: auto;
 }
-@keyframes slideUp {
+@keyframes panelUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-.panel h2 { font-size: 16px; margin-bottom: 16px; }
-.panel label {
+.panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-group { margin-bottom: 20px; }
+.panel-group:last-child { margin-bottom: 0; }
+.panel-label {
   font-size: 13px;
+  font-weight: 600;
   color: var(--text-secondary);
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
-.panel input {
-  width: 100%;
+.panel-input-wrap {
+  display: flex;
+  gap: 8px;
+}
+.panel-input-wrap input {
+  flex: 1;
   padding: 12px;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  outline: none;
   font-family: monospace;
+  outline: none;
+  transition: border-color .2s;
 }
-.panel input:focus { border-color: var(--accent); }
-.panel .hint {
+.panel-input-wrap input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+.panel-hint {
   font-size: 12px;
-  color: #6b7280;
-  margin: 8px 0 16px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  line-height: 1.5;
 }
-.panel .row { display: flex; gap: 8px; }
-.panel .row .btn { flex: 1; padding: 10px; font-size: 14px; }
+.panel-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.panel-btns .btn { flex: 1; padding: 10px; font-size: 14px; }
+
 .btn-ghost {
-  background: var(--border);
+  background: var(--surface-hover);
+  border: none;
   color: var(--text);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.status {
+.btn-ghost:active { background: var(--border); }
+
+.btn-primary-sm {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary-sm:active { background: var(--accent-hover); }
+
+.status-msg {
   font-size: 13px;
   margin-top: 10px;
   padding: 8px 12px;
   border-radius: 6px;
   display: none;
 }
-.status.show { display: block; }
-.status.ok { background: #064e3b; color: #6ee7b7; }
-.status.fail { background: var(--error-bg); color: var(--error); }
+.status-msg.show { display: block; }
+.status-msg.ok { background: var(--success-bg); color: var(--success); }
+.status-msg.fail { background: var(--error-bg); color: var(--error); }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+.app-info {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
+.app-info .dot { color: var(--text-tertiary); }
+.app-info .ok { color: var(--success); }
+.app-info .fail { color: var(--error); }
+
+/* --- Panel close on tap outside --- */
+.panel-bg-close {
+  position: absolute;
+  inset: 0;
+}
+.panel, .panel-bg-close { position: relative; }
 </style>
 </head>
 <body>
 
-<!-- Offline Banner (App Shell) -->
-<div id="offline-banner">📡 離線模式 — 部分功能可能受限</div>
+<!-- ===== OFFLINE BANNER ===== -->
+<div id="offline-banner">⚠️ 目前離線，部分功能可能無法使用</div>
 
-<!-- App Bar (App Shell) -->
+<!-- ===== APP BAR ===== -->
 <header class="app-bar">
-  <div class="app-bar__title">🇹🇭 <span>→</span> 中文 🇹🇼</div>
-  <div class="app-bar__actions">
-    <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
+  <div class="app-bar-title">
+    🇹🇭 <span class="arrow">→</span> 🇹🇼 中文
   </div>
+  <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
 </header>
 
-<!-- Main Content -->
+<!-- ===== MAIN ===== -->
 <main>
   <!-- Input -->
-  <div class="input-area">
-    <textarea id="input" placeholder="貼上泰文..."
+  <div class="card input-area">
+    <textarea id="input" placeholder="在此貼上泰文..."
       oninput="onInput()"></textarea>
-    <div class="char-count" id="charCount">0</div>
+    <div class="input-meta" id="charCount">0 字</div>
   </div>
 
   <!-- Translate Button -->
-  <button class="btn btn-primary" id="btn" onclick="translate2()">
-    <span>翻譯</span>
-    <span style="font-size:14px;opacity:0.7">แปล</span>
+  <button class="btn-translate" id="btn" onclick="translate2()">
+    <span class="label">
+      <span>翻譯</span>
+      <span class="shortcut-hint">Ctrl+↵</span>
+    </span>
   </button>
 
-  <!-- Loading State -->
+  <!-- Loading -->
   <div id="loading">
-    <div class="spinner"></div>
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
     <span>翻譯中...</span>
   </div>
 
-  <!-- Error State -->
+  <!-- Error -->
   <div id="error"></div>
 
   <!-- Result -->
   <div id="result">
-    <button class="copy-btn" onclick="copyResult()">📋 複製</button>
-    <div id="resultText"></div>
+    <div class="result-label">翻譯結果</div>
+    <div class="result-text" id="resultText"></div>
+    <div class="result-actions">
+      <button class="result-btn" onclick="copyResult()">📋 複製</button>
+      <!-- <button class="result-btn" onclick="speakResult()">🔊 朗讀</button> -->
+    </div>
   </div>
 </main>
 
-<!-- Footer -->
-<div class="footer">กุญแจ API ถูกเก็บไว้ในเครื่องคุณเท่านั้น</div>
+<!-- ===== FOOTER ===== -->
+<div class="footer">金鑰僅儲存在本機瀏覽器</div>
 
-<!-- Settings Panel -->
-<div class="overlay" id="settings" onclick="closeOnBg(event)">
+<!-- ===== SETTINGS PANEL ===== -->
+<div class="overlay" id="settings" onclick="if(event.target===this)closeSettings()">
   <div class="panel" onclick="event.stopPropagation()">
-    <h2>⚙️ 設定</h2>
-    <label>Agnes API 金鑰</label>
-    <div class="row">
-      <input type="password" id="apikey"
-        placeholder="cpk-xxxxxxxxxxxxxxxxxxxx" spellcheck="false">
-      <button class="btn btn-ghost" style="flex:0;padding:10px 14px"
-        onclick="toggleKeyVis()">👁️</button>
-    </div>
-    <div class="hint">金鑰只存在你的瀏覽器，不會外傳</div>
-    <div class="row">
-      <button class="btn btn-ghost" onclick="verifyKey()">驗證</button>
-      <button class="btn btn-primary" onclick="saveKey()">儲存</button>
-    </div>
-    <div class="status" id="keyStatus"></div>
+    <div class="panel-title">⚙️ 設定</div>
 
-    <hr style="border-color:var(--border);margin:20px 0">
-
-    <label>App 版本</label>
-    <div style="color:var(--text-secondary);font-size:13px;">
-      v2.0 · Service Worker 已註冊
-      <span id="swStatus"></span>
+    <div class="panel-group">
+      <label class="panel-label">Agnes API 金鑰</label>
+      <div class="panel-input-wrap">
+        <input type="password" id="apikey"
+          placeholder="cpk-xxxxxxxxxxxxxxxxxxxx" spellcheck="false"
+          onkeydown="if(event.key==='Enter')saveKey()">
+        <button class="btn-ghost" style="flex:0;padding:12px;font-size:16px"
+          onclick="toggleKeyVis()">👁️</button>
+      </div>
+      <div class="panel-hint">
+        金鑰僅存在此瀏覽器，每次翻譯請求直接送至 Agnes API，不會經過第三方伺服器。
+      </div>
+      <div class="panel-btns">
+        <button class="btn-ghost" onclick="verifyKey()">驗證連線</button>
+        <button class="btn-primary-sm" onclick="saveKey()">儲存金鑰</button>
+      </div>
+      <div class="status-msg" id="keyStatus"></div>
     </div>
-    <button class="btn btn-ghost" style="margin-top:10px;"
-      onclick="updateSW()">檢查更新</button>
+
+    <hr class="divider">
+
+    <div class="panel-group">
+      <label class="panel-label">應用程式資訊</label>
+      <div class="app-info">
+        <div>版本：3.0</div>
+        <div id="swInfo">Service Worker：檢查中...</div>
+      </div>
+      <div class="panel-btns">
+        <button class="btn-ghost" onclick="checkUpdate()">檢查更新</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="panel-group">
+      <button class="btn-ghost" style="width:100%;padding:10px;text-align:center;font-size:14px"
+        onclick="clearAll()">清除所有資料</button>
+    </div>
+
+    <!-- invisible close zone -->
+    <div style="height:20px"></div>
   </div>
 </div>
 
 <script>
 /* ============================================
-   Thai → ZH-TW Translator PWA v2
-   Architecture: App Shell + Network-first API
+   Thai → ZH-TW Translator PWA v3
+   繁體中文介面 · App Shell · Agnes API
    ============================================ */
 
-// === CONSTANTS ===
 const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
 const MODEL = 'agnes-2.0-flash';
-const SYSTEM = `[ROLE]
+const SYSTEM_PROMPT = `[ROLE]
 專業泰文翻譯，泰國本地語言專家 → 繁體中文（台灣正體）。
 
 [SCOPE]
@@ -393,92 +601,90 @@ const SYSTEM = `[ROLE]
 4. 泰文專有名詞保持音譯 + 中文備註
 5. 翻譯完要像台灣人寫的中文，不是翻譯腔`;
 
-// === STATE ===
+// --- State ---
 let savedKey = localStorage.getItem('agnes_api_key') || '';
 let busy = false;
+let copyTimeout = null;
 
-// === DOM REFS ===
+// --- DOM ---
 const $ = id => document.getElementById(id);
 const input = $('input');
 const btn = $('btn');
 const loading = $('loading');
-const result = $('result');
+const resultDiv = $('result');
 const resultText = $('resultText');
-const error = $('error');
+const errorDiv = $('error');
 const charCount = $('charCount');
 
-// === INIT ===
+// --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
-  registerSW();
+  initSW();
+  if (savedKey && input.value.trim()) {
+    charCount.textContent = input.value.length + ' 字';
+  }
 });
 
-// === SERVICE WORKER ===
-async function registerSW() {
+// ============ SERVICE WORKER ============
+async function initSW() {
   if (!('serviceWorker' in navigator)) {
-    $('swStatus').textContent = '· ❌ 不支援';
+    $('swInfo').textContent = 'Service Worker：❌ 此瀏覽器不支援';
     return;
   }
   try {
     const reg = await navigator.serviceWorker.register('service-worker.js', {
       scope: '/thai-zh-pwa/'
     });
-    $('swStatus').textContent = '· ✅ v2';
-    // Check for updates
+    $('swInfo').textContent = 'Service Worker：✅ 已註冊 (v2)';
     reg.addEventListener('updatefound', () => {
-      console.log('[SW] Update found');
+      $('swInfo').textContent = 'Service Worker：🔄 發現新版本';
     });
   } catch(e) {
-    $('swStatus').textContent = '· ❌ ' + e.message;
+    $('swInfo').textContent = 'Service Worker：❌ ' + e.message;
   }
 }
 
-async function updateSW() {
+async function checkUpdate() {
   if (!('serviceWorker' in navigator)) return;
   const reg = await navigator.serviceWorker.getRegistration();
   if (reg) {
     await reg.update();
-    alert('已檢查更新');
+    alert('✅ 已檢查更新，若無反應則為最新版本');
   }
 }
 
-// === OFFLINE DETECTION ===
-window.addEventListener('offline', () => {
-  $('offline-banner').classList.add('show');
-});
-window.addEventListener('online', () => {
-  $('offline-banner').classList.remove('show');
-});
+// ============ OFFLINE ============
+window.addEventListener('offline', () => $('offline-banner').classList.add('show'));
+window.addEventListener('online', () => $('offline-banner').classList.remove('show'));
 
-// === INPUT ===
+// ============ INPUT ============
 function onInput() {
   const len = input.value.length;
-  charCount.textContent = len > 999 ? '999+' : len;
-  // Clear previous result on new input
-  if (result.classList.contains('show')) {
-    result.classList.remove('show');
-  }
-  if (error.classList.contains('show')) {
-    error.classList.remove('show');
-  }
+  charCount.textContent = len + ' 字';
+  if (resultDiv.classList.contains('show')) resultDiv.classList.remove('show');
+  if (errorDiv.classList.contains('show')) errorDiv.classList.remove('show');
 }
 
-// === TRANSLATION ===
+// ============ TRANSLATION ============
 async function translate2() {
   if (busy) return;
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) {
+    input.focus();
+    return;
+  }
 
   const key = savedKey || localStorage.getItem('agnes_api_key');
   if (!key) {
-    showError('⚠️ 請先點 ⚙️ 設定 API 金鑰');
+    showError('⚠️ 請先點右上 ⚙️ 設定 API 金鑰');
+    setTimeout(() => toggleSettings(), 500);
     return;
   }
 
   busy = true;
   btn.disabled = true;
   loading.classList.add('show');
-  result.classList.remove('show');
-  error.classList.remove('show');
+  resultDiv.classList.remove('show');
+  errorDiv.classList.remove('show');
 
   try {
     const res = await fetch(API_URL, {
@@ -490,7 +696,7 @@ async function translate2() {
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: SYSTEM },
+          { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: '原文：\n' + text }
         ],
         temperature: 0.3,
@@ -499,17 +705,21 @@ async function translate2() {
     });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error?.message || res.statusText);
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
     }
 
     const data = await res.json();
     resultText.textContent = data.choices[0].message.content.trim();
-    result.classList.add('show');
+    resultDiv.classList.add('show');
+    // Scroll to result on mobile
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   } catch(e) {
     if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-      showError('🌐 網路連線失敗，請檢查網路後重試');
+      showError('🌐 網路連線失敗，請確認網路後重試');
+    } else if (e.message.includes('401') || e.message.includes('unauthorized') || e.message.includes('Unauthorized')) {
+      showError('🔑 API 金鑰無效，請在設定中重新輸入');
     } else {
       showError('❌ ' + e.message);
     }
@@ -521,59 +731,54 @@ async function translate2() {
 }
 
 function showError(msg) {
-  error.textContent = msg;
-  error.classList.add('show');
+  errorDiv.textContent = msg;
+  errorDiv.classList.add('show');
+  errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// === COPY ===
+// ============ RESULT ACTIONS ============
 async function copyResult() {
   const text = resultText.textContent;
+  if (!text) return;
   try {
     await navigator.clipboard.writeText(text);
-    const btn = document.querySelector('.copy-btn');
+    const btn = document.querySelector('.result-btn');
+    const orig = btn.textContent;
     btn.textContent = '✅ 已複製';
-    setTimeout(() => { btn.textContent = '📋 複製'; }, 1500);
+    clearTimeout(copyTimeout);
+    copyTimeout = setTimeout(() => { btn.textContent = orig; }, 1500);
   } catch {
-    alert('複製失敗，請手動選取');
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
   }
 }
 
-// === SETTINGS ===
-function toggleSettings() {
-  $('settings').classList.toggle('show');
-  if ($('settings').classList.contains('show')) {
-    $('apikey').value = savedKey;
-  }
-}
-
-function closeOnBg(e) {
-  if (e.target === e.currentTarget) {
-    e.currentTarget.classList.remove('show');
-  }
-}
-
+// ============ SETTINGS ============
+function toggleSettings() { $('settings').classList.toggle('show'); }
+function closeSettings() { $('settings').classList.remove('show'); }
 function toggleKeyVis() {
   const el = $('apikey');
   el.type = el.type === 'password' ? 'text' : 'password';
 }
-
 function saveKey() {
   const key = $('apikey').value.trim();
   if (key) {
     localStorage.setItem('agnes_api_key', key);
     savedKey = key;
-    showKeyStatus('✅ 已儲存', 'ok');
+    showKeyStatus('✅ 金鑰已儲存', 'ok');
   } else {
     localStorage.removeItem('agnes_api_key');
     savedKey = '';
-    showKeyStatus('已清除', 'ok');
+    showKeyStatus('金鑰已清除', 'ok');
   }
 }
-
 async function verifyKey() {
   const key = $('apikey').value.trim();
-  if (!key) { showKeyStatus('請填入金鑰', 'fail'); return; }
-
+  if (!key) { showKeyStatus('請先貼入金鑰', 'fail'); return; }
   showKeyStatus('驗證中...', 'ok');
   try {
     const res = await fetch(API_URL, {
@@ -584,33 +789,49 @@ async function verifyKey() {
       },
       body: JSON.stringify({
         model: MODEL,
-        messages: [{ role: 'user', content: 'hi' }],
+        messages: [{ role: 'user', content: 'ok' }],
         max_tokens: 5
       })
     });
-    if (res.ok) showKeyStatus('✅ 金鑰有效', 'ok');
+    if (res.ok) showKeyStatus('✅ 金鑰有效，連線正常', 'ok');
     else {
-      const e = await res.json().catch(() => ({}));
-      showKeyStatus('❌ ' + (e.error?.message || '無效'), 'fail');
+      const e = await res.json().catch(()=>({}));
+      showKeyStatus('❌ ' + (e.error?.message || '金鑰無效'), 'fail');
     }
   } catch(e) {
-    showKeyStatus('連線失敗：' + e.message, 'fail');
+    showKeyStatus('❌ 無法連線：' + e.message, 'fail');
   }
 }
-
 function showKeyStatus(msg, type) {
   const el = $('keyStatus');
   el.textContent = msg;
-  el.className = 'status show ' + type;
+  el.className = 'status-msg show ' + type;
 }
 
-// === KEYBOARD SHORTCUT ===
+function clearAll() {
+  if (!confirm('確定要清除所有資料（含金鑰與快取）？')) return;
+  localStorage.removeItem('agnes_api_key');
+  savedKey = '';
+  $('apikey').value = '';
+  showKeyStatus('已清除所有資料', 'ok');
+  if ('caches' in window) {
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  }
+}
+
+// ============ KEYBOARD ============
 input.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
     e.preventDefault();
     translate2();
   }
 });
+
+// Close settings on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('settings').classList.contains('show')) closeSettings();
+});
 </script>
 </body>
 </html>
+
