@@ -430,6 +430,26 @@ main {
 }
 .btn-ghost:active { background: var(--border); }
 
+.btn-provider {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-provider.active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .btn-primary-sm {
   background: var(--accent);
   border: none;
@@ -537,20 +557,26 @@ main {
     <div class="panel-title">⚙️ 設定</div>
 
     <div class="panel-group">
-      <label class="panel-label">Agnes API 金鑰</label>
+      <label class="panel-label">翻譯引擎</label>
+      <div class="panel-btns" style="margin-bottom:16px">
+        <button class="btn-provider" id="prov-gemini" onclick="switchProvider('gemini')">Gemini ⭐</button>
+        <button class="btn-provider" id="prov-agnes" onclick="switchProvider('agnes')">Agnes</button>
+      </div>
+
+      <label class="panel-label" id="keyLabel">Gemini API 金鑰</label>
       <div class="panel-input-wrap">
         <input type="password" id="apikey"
-          placeholder="cpk-xxxxxxxxxxxxxxxxxxxx" spellcheck="false"
+          placeholder="AI..." spellcheck="false"
           onkeydown="if(event.key==='Enter')saveKey()">
         <button class="btn-ghost" style="flex:0;padding:12px;font-size:16px"
           onclick="toggleKeyVis()">👁️</button>
       </div>
       <div class="panel-hint">
-        金鑰僅存在此瀏覽器，每次翻譯請求直接送至 Agnes API，不會經過第三方伺服器。
+        金鑰僅存在此瀏覽器，直接送至 Gemini API，不會經過第三方伺服器。
       </div>
       <div class="panel-btns">
         <button class="btn-ghost" onclick="verifyKey()">驗證連線</button>
-        <button class="btn-primary-sm" onclick="saveKey()">儲存金鑰</button>
+        <button class="btn-primary-sm" onclick="saveKey()">儲存</button>
       </div>
       <div class="status-msg" id="keyStatus"></div>
     </div>
@@ -560,8 +586,9 @@ main {
     <div class="panel-group">
       <label class="panel-label">應用程式資訊</label>
       <div class="app-info">
-        <div>版本：3.0</div>
+        <div>版本：3.1 · 雙 API 支援</div>
         <div id="swInfo">Service Worker：檢查中...</div>
+        <div style="margin-top:4px" id="currentProvider">使用引擎：Gemini</div>
       </div>
       <div class="panel-btns">
         <button class="btn-ghost" onclick="checkUpdate()">檢查更新</button>
@@ -583,11 +610,47 @@ main {
 <script>
 /* ============================================
    Thai → ZH-TW Translator PWA v3
-   繁體中文介面 · App Shell · Agnes API
+   繁體中文介面 · App Shell · Gemini + Agnes
    ============================================ */
 
-const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
-const MODEL = 'agnes-2.0-flash';
+// --- API Providers ---
+const PROVIDERS = {
+  gemini: {
+    name: 'Gemini',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
+    headers: (key) => ({
+      'Content-Type': 'application/json',
+      'X-goog-api-key': key
+    }),
+    body: (messages) => ({
+      contents: messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }))
+    }),
+    extract: (data) => data.candidates?.[0]?.content?.parts?.[0]?.text || '',
+    keyLabel: 'Gemini API 金鑰',
+    keyPlaceholder: 'AI...'
+  },
+  agnes: {
+    name: 'Agnes',
+    url: 'https://apihub.agnes-ai.com/v1/chat/completions',
+    headers: (key) => ({
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + key
+    }),
+    body: (messages) => ({
+      model: 'agnes-2.0-flash',
+      messages: messages,
+      temperature: 0.3,
+      max_tokens: 4096
+    }),
+    extract: (data) => data.choices?.[0]?.message?.content || '',
+    keyLabel: 'Agnes API 金鑰',
+    keyPlaceholder: 'cpk-...'
+  }
+};
+
 const SYSTEM_PROMPT = `[ROLE]
 專業泰文翻譯，泰國本地語言專家 → 繁體中文（台灣正體）。
 
@@ -602,7 +665,11 @@ const SYSTEM_PROMPT = `[ROLE]
 5. 翻譯完要像台灣人寫的中文，不是翻譯腔`;
 
 // --- State ---
-let savedKey = localStorage.getItem('agnes_api_key') || '';
+let savedKey = {
+  gemini: localStorage.getItem('gemini_api_key') || '',
+  agnes: localStorage.getItem('agnes_api_key') || ''
+};
+let activeProvider = localStorage.getItem('active_provider') || 'gemini';
 let busy = false;
 let copyTimeout = null;
 
@@ -619,7 +686,7 @@ const charCount = $('charCount');
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
   initSW();
-  if (savedKey && input.value.trim()) {
+  if (savedKey.gemini && input.value.trim()) {
     charCount.textContent = input.value.length + ' 字';
   }
 });
@@ -668,14 +735,12 @@ function onInput() {
 async function translate2() {
   if (busy) return;
   const text = input.value.trim();
-  if (!text) {
-    input.focus();
-    return;
-  }
+  if (!text) { input.focus(); return; }
 
-  const key = savedKey || localStorage.getItem('agnes_api_key');
+  const provider = PROVIDERS[activeProvider];
+  const key = savedKey[activeProvider];
   if (!key) {
-    showError('⚠️ 請先點右上 ⚙️ 設定 API 金鑰');
+    showError('⚠️ 請先點右上 ⚙️ 設定 ' + provider.name + ' API 金鑰');
     setTimeout(() => toggleSettings(), 500);
     return;
   }
@@ -687,41 +752,34 @@ async function translate2() {
   errorDiv.classList.remove('show');
 
   try {
-    const res = await fetch(API_URL, {
+    const systemMsg = { role: 'system', content: SYSTEM_PROMPT };
+    const userMsg = { role: 'user', content: '原文：\n' + text };
+    const res = await fetch(provider.url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: '原文：\n' + text }
-        ],
-        temperature: 0.3,
-        max_tokens: 4096
-      })
+      headers: provider.headers(key),
+      body: JSON.stringify(provider.body([systemMsg, userMsg]))
     });
 
     if (!res.ok) {
       const err = await res.json().catch(()=>({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
+      const msg = err.error?.message || err.error?.code || `HTTP ${res.status}`;
+      throw new Error(msg);
     }
 
     const data = await res.json();
-    resultText.textContent = data.choices[0].message.content.trim();
+    const translated = provider.extract(data);
+    if (!translated) throw new Error('API 回傳格式異常');
+    resultText.textContent = translated.trim();
     resultDiv.classList.add('show');
-    // Scroll to result on mobile
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   } catch(e) {
     if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
       showError('🌐 網路連線失敗，請確認網路後重試');
-    } else if (e.message.includes('401') || e.message.includes('unauthorized') || e.message.includes('Unauthorized')) {
-      showError('🔑 API 金鑰無效，請在設定中重新輸入');
+    } else if (e.message.includes('API_KEY_INVALID') || e.message.includes('401') || e.message.includes('Unauthorized')) {
+      showError('🔑 ' + provider.name + ' API 金鑰無效，請在設定中重新輸入');
     } else {
-      showError('❌ ' + e.message);
+      showError('❌ ' + provider.name + '：' + e.message);
     }
   }
 
@@ -758,45 +816,87 @@ async function copyResult() {
 }
 
 // ============ SETTINGS ============
-function toggleSettings() { $('settings').classList.toggle('show'); }
+function toggleSettings() {
+  $('settings').classList.toggle('show');
+  if ($('settings').classList.contains('show')) {
+    updateProviderUI();
+    $('apikey').value = savedKey[activeProvider] || '';
+    $('apikey').placeholder = PROVIDERS[activeProvider].keyPlaceholder;
+    $('keyLabel').textContent = PROVIDERS[activeProvider].keyLabel;
+  }
+}
 function closeSettings() { $('settings').classList.remove('show'); }
 function toggleKeyVis() {
   const el = $('apikey');
   el.type = el.type === 'password' ? 'text' : 'password';
 }
+
+function switchProvider(name) {
+  // Save current key first
+  const currentKey = $('apikey').value.trim();
+  if (currentKey) savedKey[activeProvider] = currentKey;
+
+  activeProvider = name;
+  localStorage.setItem('active_provider', name);
+
+  // Load key for new provider
+  $('apikey').value = savedKey[name] || '';
+  $('apikey').placeholder = PROVIDERS[name].keyPlaceholder;
+  $('keyLabel').textContent = PROVIDERS[name].keyLabel;
+  $('currentProvider').textContent = '使用引擎：' + PROVIDERS[name].name;
+
+  // Update hint text
+  const hints = {
+    gemini: '金鑰僅存在此瀏覽器，直接送至 Gemini API，不會經過第三方伺服器。',
+    agnes: '金鑰僅存在此瀏覽器，每次翻譯請求直接送至 Agnes API，不會經過第三方伺服器。'
+  };
+  document.querySelector('.panel-hint').textContent = hints[name] || '';
+
+  updateProviderUI();
+  // Clear previous status
+  document.getElementById('keyStatus').classList.remove('show');
+}
+
+function updateProviderUI() {
+  document.querySelectorAll('.btn-provider').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('prov-' + activeProvider);
+  if (btn) btn.classList.add('active');
+  $('currentProvider').textContent = '使用引擎：' + PROVIDERS[activeProvider].name;
+  $('apikey').placeholder = PROVIDERS[activeProvider].keyPlaceholder;
+  $('keyLabel').textContent = PROVIDERS[activeProvider].keyLabel;
+}
+
 function saveKey() {
   const key = $('apikey').value.trim();
+  const provider = PROVIDERS[activeProvider];
+  const storageKey = activeProvider + '_api_key';
   if (key) {
-    localStorage.setItem('agnes_api_key', key);
-    savedKey = key;
-    showKeyStatus('✅ 金鑰已儲存', 'ok');
+    localStorage.setItem(storageKey, key);
+    savedKey[activeProvider] = key;
+    showKeyStatus('✅ ' + provider.name + ' 金鑰已儲存', 'ok');
   } else {
-    localStorage.removeItem('agnes_api_key');
-    savedKey = '';
+    localStorage.removeItem(storageKey);
+    savedKey[activeProvider] = '';
     showKeyStatus('金鑰已清除', 'ok');
   }
 }
 async function verifyKey() {
   const key = $('apikey').value.trim();
+  const provider = PROVIDERS[activeProvider];
   if (!key) { showKeyStatus('請先貼入金鑰', 'fail'); return; }
+
   showKeyStatus('驗證中...', 'ok');
   try {
-    const res = await fetch(API_URL, {
+    const testMsg = { role: 'user', content: 'ok' };
+    const res = await fetch(provider.url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [{ role: 'user', content: 'ok' }],
-        max_tokens: 5
-      })
+      headers: provider.headers(key),
+      body: JSON.stringify(provider.body([testMsg]))
     });
-    if (res.ok) showKeyStatus('✅ 金鑰有效，連線正常', 'ok');
+    if (res.ok) showKeyStatus('✅ ' + provider.name + ' 連線正常', 'ok');
     else {
       const e = await res.json().catch(()=>({}));
-      showKeyStatus('❌ ' + (e.error?.message || '金鑰無效'), 'fail');
+      showKeyStatus('❌ ' + (e.error?.message || e.error?.code || '無效'), 'fail');
     }
   } catch(e) {
     showKeyStatus('❌ 無法連線：' + e.message, 'fail');
@@ -809,10 +909,14 @@ function showKeyStatus(msg, type) {
 }
 
 function clearAll() {
-  if (!confirm('確定要清除所有資料（含金鑰與快取）？')) return;
+  if (!confirm('確定要清除所有資料（含兩組金鑰與快取）？')) return;
+  localStorage.removeItem('gemini_api_key');
   localStorage.removeItem('agnes_api_key');
-  savedKey = '';
+  localStorage.removeItem('active_provider');
+  savedKey = { gemini: '', agnes: '' };
+  activeProvider = 'gemini';
   $('apikey').value = '';
+  updateProviderUI();
   showKeyStatus('已清除所有資料', 'ok');
   if ('caches' in window) {
     caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
