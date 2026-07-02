@@ -1,21 +1,21 @@
 {
-  "name": "八方帶財 — Thai to Chinese Translator",
-    "short_name": "八方帶財",
-  "description": "泰文翻譯繁體中文 — 專業泰國本地用語，即時翻譯",
+  "name": "八方帶財 — 泰文翻譯",
+  "short_name": "八方帶財",
+  "description": "泰文轉繁體中文翻譯工具 — 支援 Gemini 與 Agnes，離線使用",
   "start_url": "/thai-zh-pwa/",
   "scope": "/thai-zh-pwa/",
   "id": "/thai-zh-pwa/",
   "display": "standalone",
   "display_override": ["window-control-overlay", "minimal-ui"],
-  "background_color": "#111827",
-  "theme_color": "#111827",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "orientation": "portrait",
   "categories": ["utilities", "education", "productivity"],
   "lang": "zh-TW",
   "dir": "ltr",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
@@ -33,21 +33,13 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "screenshot-narrow.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
   "shortcuts": [
     {
       "name": "翻譯",
       "short_name": "翻譯",
       "description": "開啟翻譯",
       "url": "/thai-zh-pwa/",
-      "icons": [{ "src": "icon.svg", "sizes": "any" }]
+      "icons": [{ "src": "logo.svg", "sizes": "any" }]
     }
   ]
 }

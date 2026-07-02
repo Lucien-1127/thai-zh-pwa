@@ -1,12 +1,12 @@
-// thai-zh-pwa — Service Worker v2
+// 八方帶財 — Service Worker v4
 // Strategy: Cache-First for App Shell, Network-First for API
 
-const CACHE = 'thai-zh-pwa-v3';
+const CACHE = 'thai-zh-pwa-v4';
 const SHELL = [
   '/thai-zh-pwa/',
   '/thai-zh-pwa/index.html',
   '/thai-zh-pwa/manifest.json',
-  '/thai-zh-pwa/icon.svg',
+  '/thai-zh-pwa/logo.svg',
   '/thai-zh-pwa/icon-192.png',
   '/thai-zh-pwa/icon-512.png'
 ];

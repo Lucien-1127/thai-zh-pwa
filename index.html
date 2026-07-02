@@ -2,28 +2,27 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="泰文翻譯">
+<meta name="apple-mobile-web-app-title" content="八方帶財">
 <link rel="apple-touch-icon" href="icon-192.png">
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
 <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="description" content="泰文轉繁體中文翻譯工具">
-<title>泰文翻譯 — Thai to Chinese</title>
+<meta name="description" content="泰文轉繁體中文翻譯工具 — 八方帶財">
+<title>八方帶財 — 泰文翻譯</title>
 <style>
 /* ========================================
-   Thai → ZH-TW Translator PWA v3
-   繁體中文介面 · 深色/淺色 · 手勢優化
+   八方帶財 — Thai → ZH-TW Translator PWA
+   v4.0 · Premium Edition
    ======================================== */
-
-/* --- Reset --- */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-/* --- Variables (Dark Default) --- */
+/* --- Variables --- */
 :root {
   --bg: #0f172a;
   --surface: #1e293b;
@@ -36,6 +35,8 @@
   --accent: #818cf8;
   --accent-hover: #6366f1;
   --accent-subtle: rgba(129,140,248,0.12);
+  --gold: #f5a623;
+  --gold-light: #ffd700;
   --error: #f87171;
   --error-bg: rgba(248,113,113,0.1);
   --success: #34d399;
@@ -44,9 +45,10 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  --font-base: -apple-system, 'Noto Sans TC', 'PingFang TC', 'Noto Sans Thai', sans-serif;
 }
 
-/* --- Light Mode --- */
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #f8fafc;
@@ -65,89 +67,93 @@
     --success: #059669;
     --success-bg: rgba(5,150,105,0.06);
     --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
   }
 }
 
-/* --- Base --- */
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
+html, body { height: 100%; overflow: hidden; }
 body {
-  font-family: -apple-system, 'Noto Sans TC', 'PingFang TC', 'Noto Sans Thai', sans-serif;
+  font-family: var(--font-base);
   background: var(--bg);
   color: var(--text);
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   transition: background .3s, color .3s;
   -webkit-font-smoothing: antialiased;
+}
+
+/* --- App Bar --- */
+.app-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  padding-top: calc(10px + env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg);
+  transition: border-color .3s;
+  -webkit-user-select: none; user-select: none;
+}
+.app-bar-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.app-bar-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  flex-shrink: 0;
+}
+.app-bar-title {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.app-bar-title .sub {
+  font-weight: 400; font-size: 13px;
+  color: var(--text-secondary); margin-left: 6px;
+}
+.app-bar-actions {
+  display: flex; align-items: center; gap: 4px;
+}
+.icon-btn {
+  background: transparent; border: none;
+  color: var(--text-secondary);
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, transform .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:active { background: var(--accent-subtle); color: var(--accent); transform: scale(0.92); }
+
+/* --- Engine Badge --- */
+.engine-badge {
+  font-size: 10px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  padding: 2px 8px; border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* --- Main --- */
+main {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 12px;
 }
 
 /* --- Offline Banner --- */
 #offline-banner {
   display: none;
   background: linear-gradient(135deg, #78350f, #92400e);
-  color: #fde68a;
-  text-align: center;
-  padding: 6px 16px;
-  font-size: 13px;
-  font-weight: 500;
+  color: #fde68a; text-align: center;
+  padding: 6px 16px; font-size: 13px; font-weight: 500;
   flex-shrink: 0;
 }
 #offline-banner.show { display: block; }
 
-/* --- App Bar --- */
-.app-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  padding-top: calc(12px + env(safe-area-inset-top));
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  background: var(--bg);
-  transition: border-color .3s;
-  -webkit-user-select: none;
-  user-select: none;
-}
-.app-bar-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-.app-bar-title .arrow { color: var(--text-tertiary); margin: 0 6px; }
-
-/* --- Icon Button --- */
-.icon-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  width: 40px; height: 40px;
-  border-radius: 10px;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .15s, color .15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.icon-btn:active { background: var(--accent-subtle); color: var(--accent); }
-
-/* --- Main --- */
-main {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* --- Card (Surface) --- */
+/* --- Card --- */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -155,23 +161,18 @@ main {
   transition: background .3s, border-color .3s;
 }
 
-/* --- Input Area --- */
-.input-area {
-  position: relative;
-}
+/* --- Input --- */
+.input-area { position: relative; }
 .input-area textarea {
   width: 100%;
-  min-height: 160px;
-  max-height: 50vh;
+  min-height: 160px; max-height: 50vh;
   resize: vertical;
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 16px;
-  padding-bottom: 28px;
-  font-size: 16px;
-  line-height: 1.7;
+  padding: 16px; padding-bottom: 28px;
+  font-size: 16px; line-height: 1.7;
   font-family: inherit;
   outline: none;
   transition: border-color .2s, background .3s;
@@ -182,72 +183,60 @@ main {
 }
 .input-area textarea::placeholder { color: var(--text-tertiary); }
 .input-meta {
-  position: absolute;
-  bottom: 8px;
-  right: 10px;
-  font-size: 11px;
-  color: var(--text-tertiary);
+  position: absolute; bottom: 8px; right: 10px;
+  font-size: 11px; color: var(--text-tertiary);
   pointer-events: none;
+  display: flex; gap: 8px; align-items: center;
 }
+.input-clear {
+  position: absolute; top: 8px; right: 8px;
+  background: var(--surface-hover); border: none;
+  color: var(--text-tertiary);
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 14px; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.input-clear.show { display: flex; }
 
-/* --- Translate Button --- */
-.btn-translate {
-  width: 100%;
-  padding: 14px;
-  border: none;
+/* --- Buttons --- */
+.btn-row { display: flex; gap: 8px; }
+.btn {
+  flex: 1; padding: 14px; border: none;
   border-radius: var(--radius-md);
-  font-size: 17px;
-  font-weight: 600;
-  cursor: pointer;
-  background: var(--accent);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  font-size: 17px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   transition: background .2s, transform .12s, opacity .2s;
   -webkit-tap-highlight-color: transparent;
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden;
 }
-.btn-translate:active { transform: scale(0.97); }
-.btn-translate:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-sample {
+  background: var(--surface-hover); border: none;
+  color: var(--text-secondary);
+  width: 50px; border-radius: var(--radius-md);
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .12s;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn-translate .label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-translate .shortcut-hint {
-  font-size: 12px;
-  opacity: 0.6;
-  font-weight: 400;
-}
-@media (hover: hover) {
-  .btn-translate:hover { background: var(--accent-hover); }
-}
+.btn-sample:active { transform: scale(0.92); }
+.shortcut-hint { font-size: 12px; opacity: 0.5; font-weight: 400; }
 
 /* --- Loading --- */
 #loading {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 20px;
-  color: var(--text-secondary);
-  font-size: 14px;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  padding: 24px; color: var(--text-secondary); font-size: 14px;
 }
 #loading.show { display: flex; }
-.loading-dots {
-  display: flex;
-  gap: 4px;
-}
+.loading-dots { display: flex; gap: 5px; }
 .loading-dots span {
-  width: 6px; height: 6px;
-  border-radius: 50%;
+  width: 7px; height: 7px; border-radius: 50%;
   background: var(--accent);
   animation: dotBounce 1.4s ease-in-out infinite both;
 }
@@ -255,9 +244,11 @@ main {
 .loading-dots span:nth-child(2) { animation-delay: 0.16s; }
 .loading-dots span:nth-child(3) { animation-delay: 0.32s; }
 @keyframes dotBounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
   40% { transform: scale(1); opacity: 1; }
 }
+#loading .engine-name { font-size: 12px; opacity: 0.5; }
+#elapsed { font-size: 12px; opacity: 0.6; }
 
 /* --- Error --- */
 #error {
@@ -265,9 +256,7 @@ main {
   background: var(--error-bg);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  font-size: 14px;
-  line-height: 1.5;
+  padding: 12px 16px; font-size: 14px; line-height: 1.5;
   color: var(--error);
   animation: fadeSlideIn .25s ease;
 }
@@ -280,260 +269,352 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
-  padding-top: 14px;
   animation: fadeSlideIn .3s ease;
-  position: relative;
 }
 #result.show { display: block; }
-#result .result-label {
-  font-size: 12px;
-  font-weight: 600;
+.result-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.result-label {
+  font-size: 12px; font-weight: 600;
   color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  text-transform: uppercase; letter-spacing: 0.5px;
 }
-#result .result-text {
-  font-size: 16px;
-  line-height: 1.8;
-  white-space: pre-wrap;
-  word-break: break-word;
-  color: var(--text);
+.result-text {
+  font-size: 16px; line-height: 1.8;
+  white-space: pre-wrap; word-break: break-word;
+  color: var(--text); user-select: text;
 }
-#result .result-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+.result-actions {
+  display: flex; gap: 6px; margin-top: 12px;
+  padding-top: 10px; border-top: 1px solid var(--border);
 }
 .result-btn {
-  background: var(--surface-hover);
-  border: none;
+  background: var(--surface-hover); border: none;
   color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 13px; cursor: pointer;
   transition: background .15s, color .15s;
   -webkit-tap-highlight-color: transparent;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: flex; align-items: center; gap: 4px;
 }
 .result-btn:active { background: var(--accent-subtle); color: var(--accent); }
 
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* --- History --- */
+.history-section { margin-top: 4px; }
+.history-toggle {
+  background: none; border: none;
+  color: var(--text-tertiary); font-size: 13px;
+  cursor: pointer; width: 100%; text-align: center;
+  padding: 8px;
+  transition: color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.history-toggle:active { color: var(--text-secondary); }
+.history-list { display: none; }
+.history-list.show { display: block; }
+.history-item {
+  display: flex; gap: 8px; padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .1s;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:active { background: var(--accent-subtle); border-radius: 6px; }
+.history-item .h-source {
+  flex: 1; font-size: 13px; line-height: 1.5;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  color: var(--text-secondary);
+}
+.history-item .h-target {
+  flex: 1; font-size: 13px; line-height: 1.5;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  color: var(--text);
+}
+.history-item .h-time {
+  font-size: 10px; color: var(--text-tertiary);
+  white-space: nowrap; padding-top: 2px;
 }
 
 /* --- Footer --- */
 .footer {
   text-align: center;
-  padding: 10px 16px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   font-size: 11px;
   color: var(--text-tertiary);
   flex-shrink: 0;
-  border-top: 1px solid var(--border);
+  display: flex; justify-content: center; align-items: center; gap: 8px;
+}
+.footer .dot { opacity: 0.3; }
+.footer .version { opacity: 0.5; }
+
+/* ==============================================
+   ONBOARDING OVERLAY
+   ============================================== */
+.onboard-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.6);
+  justify-content: center; align-items: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn .4s ease;
+}
+.onboard-overlay.show { display: flex; }
+.onboard-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px 24px;
+  max-width: 360px; width: 90%;
+  text-align: center;
+  animation: scaleIn .4s ease;
+  box-shadow: var(--shadow-lg);
+}
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.onboard-logo {
+  width: 72px; height: 72px; border-radius: 16px;
+  margin-bottom: 16px;
+}
+.onboard-title {
+  font-size: 22px; font-weight: 700; margin-bottom: 6px;
+}
+.onboard-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+.onboard-steps { text-align: left; margin-bottom: 20px; }
+.onboard-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.onboard-step:last-child { border-bottom: none; }
+.onboard-step .num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent-subtle); color: var(--accent);
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.onboard-step .desc { font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+.onboard-step .desc strong { color: var(--text); }
+.onboard-btn {
+  width: 100%; padding: 14px; border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent); color: #fff;
+  font-size: 16px; font-weight: 600; cursor: pointer;
+  transition: background .2s, transform .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.onboard-btn:active { transform: scale(0.97); background: var(--accent-hover); }
+.onboard-skip {
+  display: block; margin-top: 12px;
+  background: none; border: none;
+  color: var(--text-tertiary); font-size: 13px;
+  cursor: pointer; text-decoration: underline;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ================================================
+/* ==============================================
+   INSTALL GUIDE (iOS)
+   ============================================== */
+.install-guide {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 190;
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-lg);
+  animation: panelUp .35s ease;
+}
+.install-guide.show { display: block; }
+.install-guide h3 { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+.install-guide p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; }
+.install-guide .steps { margin-bottom: 20px; }
+.install-guide .step {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border); font-size: 14px;
+}
+.install-guide .step:last-child { border-bottom: none; }
+.install-guide .step .icon { font-size: 20px; width: 28px; text-align: center; }
+.install-guide .btn-group { display: flex; gap: 8px; }
+.install-guide .btn-primary-sm {
+  flex: 1; padding: 12px; border: none; border-radius: var(--radius-sm);
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+  cursor: pointer; text-align: center;
+}
+.install-guide .btn-ghost-sm {
+  flex: 0; padding: 12px 20px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-secondary); font-size: 14px;
+  cursor: pointer;
+}
+
+/* ==============================================
+   TOAST
+   ============================================== */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 300;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 14px; color: var(--text);
+  box-shadow: var(--shadow-lg);
+  display: none;
+  animation: toastIn .3s ease;
+  white-space: nowrap;
+}
+.toast.show { display: block; }
+@keyframes toastIn {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* ==============================================
    SETTINGS PANEL
-   ================================================ */
+   ============================================== */
 .overlay {
   display: none;
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0; z-index: 100;
   background: rgba(0,0,0,0.5);
-  z-index: 100;
-  justify-content: center;
-  align-items: flex-end;
+  justify-content: center; align-items: flex-end;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
 .overlay.show { display: flex; }
 .panel {
   background: var(--surface);
-  width: 100%;
-  max-width: 500px;
+  width: 100%; max-width: 500px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 24px;
   animation: panelUp .3s ease;
-  max-height: 85vh;
-  overflow-y: auto;
+  max-height: 85vh; overflow-y: auto;
 }
 @keyframes panelUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 .panel-title {
-  font-size: 17px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-size: 17px; font-weight: 700; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
 }
 .panel-group { margin-bottom: 20px; }
 .panel-group:last-child { margin-bottom: 0; }
 .panel-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  display: block;
-  margin-bottom: 8px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary); display: block; margin-bottom: 8px;
 }
-.panel-input-wrap {
-  display: flex;
-  gap: 8px;
-}
+.panel-input-wrap { display: flex; gap: 8px; }
 .panel-input-wrap input {
-  flex: 1;
-  padding: 12px;
-  background: var(--bg);
-  color: var(--text);
+  flex: 1; padding: 12px;
+  background: var(--bg); color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: monospace;
-  outline: none;
-  transition: border-color .2s;
+  font-size: 14px; font-family: monospace;
+  outline: none; transition: border-color .2s;
 }
 .panel-input-wrap input:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 2px var(--accent-subtle);
 }
-.panel-hint {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 6px;
-  line-height: 1.5;
-}
-.panel-btns {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
+.panel-hint { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; line-height: 1.5; }
+.panel-btns { display: flex; gap: 8px; margin-top: 12px; }
 .panel-btns .btn { flex: 1; padding: 10px; font-size: 14px; }
-
 .btn-ghost {
-  background: var(--surface-hover);
-  border: none;
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  font-weight: 500;
-  cursor: pointer;
+  background: var(--surface-hover); border: none;
+  color: var(--text); border-radius: var(--radius-sm);
+  font-weight: 500; cursor: pointer;
   transition: background .15s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-ghost:active { background: var(--border); }
-
 .btn-provider {
-  flex: 1;
-  padding: 10px;
+  flex: 1; padding: 10px;
   border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .15s;
+  background: var(--bg); color: var(--text-secondary);
+  border-radius: var(--radius-sm); font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-provider.active {
   border-color: var(--accent);
   background: var(--accent-subtle);
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--accent); font-weight: 600;
 }
-
 .btn-primary-sm {
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  cursor: pointer;
+  background: var(--accent); border: none; color: #fff;
+  border-radius: var(--radius-sm); font-weight: 600; cursor: pointer;
   transition: background .15s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-primary-sm:active { background: var(--accent-hover); }
-
-.status-msg {
-  font-size: 13px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  display: none;
-}
+.status-msg { font-size: 13px; margin-top: 10px; padding: 8px 12px; border-radius: 6px; display: none; }
 .status-msg.show { display: block; }
 .status-msg.ok { background: var(--success-bg); color: var(--success); }
 .status-msg.fail { background: var(--error-bg); color: var(--error); }
-
-.divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 20px 0;
-}
-
-.app-info {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  line-height: 1.6;
-}
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.app-info { font-size: 13px; color: var(--text-tertiary); line-height: 1.6; }
 .app-info .dot { color: var(--text-tertiary); }
 .app-info .ok { color: var(--success); }
-.app-info .fail { color: var(--error); }
+.app-info span { display: block; }
 
-/* --- Panel close on tap outside --- */
-.panel-bg-close {
-  position: absolute;
-  inset: 0;
+/* --- Animations --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.panel, .panel-bg-close { position: relative; }
 </style>
 </head>
 <body>
 
-<!-- ===== OFFLINE BANNER ===== -->
+<!-- OFFLINE BANNER -->
 <div id="offline-banner">⚠️ 目前離線，部分功能可能無法使用</div>
 
-<!-- ===== APP BAR ===== -->
+<!-- APP BAR -->
 <header class="app-bar">
-  <div class="app-bar-title">
-    🇹🇭 <span class="arrow">→</span> 🇹🇼 中文
+  <div class="app-bar-brand">
+    <img class="app-bar-logo" src="logo.svg" alt="八方帶財" onclick="showOnboarding()">
+    <div>
+      <div class="app-bar-title">
+        🇹🇭→🇹🇼<span class="sub">翻譯</span>
+      </div>
+    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:6px">
-    <span id="engineBadge" style="font-size:11px;background:var(--accent-subtle);color:var(--accent);padding:3px 8px;border-radius:20px;font-weight:500">Gemini</span>
+  <div class="app-bar-actions">
+    <span class="engine-badge" id="engineBadge">Gemini</span>
     <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
   </div>
 </header>
 
-<!-- ===== MAIN ===== -->
+<!-- MAIN -->
 <main>
-  <!-- 首次使用提示 -->
-  <div id="onboarding" style="display:none;background:var(--accent-subtle);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;line-height:1.5;animation:fadeSlideIn .4s ease">
+  <!-- Onboarding hint (dismissed after first visit) -->
+  <div id="welcomeHint" style="display:none;background:var(--accent-subtle);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;line-height:1.5;animation:fadeSlideIn .4s ease">
     ✅ Gemini 金鑰已就緒，貼上泰文即可翻譯！
-    <button onclick="dismissOnboarding()" style="background:none;border:none;color:var(--accent);float:right;font-size:16px;cursor:pointer">✕</button>
   </div>
 
   <!-- Input -->
   <div class="card input-area">
     <textarea id="input" placeholder="在此貼上泰文..."
       oninput="onInput()"></textarea>
-    <button id="clearBtn" class="input-clear" onclick="clearInput()" style="display:none">✕</button>
-    <div class="input-meta" id="charCount">0 字</div>
+    <button class="input-clear" id="clearBtn" onclick="clearInput()">✕</button>
+    <div class="input-meta">
+      <span id="charCount">0</span>
+    </div>
   </div>
 
   <!-- Action Row -->
-  <div style="display:flex;gap:8px">
-    <button class="btn btn-primary" id="btn" onclick="translate2()" style="flex:1">
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn" onclick="translate2()">
       <span class="label">
         <span>翻譯</span>
-        <span class="shortcut-hint">Ctrl+↵</span>
+        <span class="shortcut-hint">⌘↵</span>
       </span>
     </button>
     <button class="btn-sample" onclick="fillSample()" title="試試範例">📝</button>
@@ -544,7 +625,7 @@ main {
     <div class="loading-dots">
       <span></span><span></span><span></span>
     </div>
-    <span>翻譯中... <span id="elapsed" style="font-size:12px;opacity:0.6"></span></span>
+    <span>翻譯中... <span id="elapsed"></span></span>
   </div>
 
   <!-- Error -->
@@ -552,28 +633,94 @@ main {
 
   <!-- Result -->
   <div id="result">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div class="result-hdr">
       <div class="result-label">翻譯結果</div>
       <button class="result-btn" onclick="copyResult()">📋 複製</button>
     </div>
     <div class="result-text" id="resultText"></div>
-    <div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end">
-      <span style="font-size:11px;color:var(--text-tertiary)" id="resultEngine"></span>
+    <div class="result-actions">
+      <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto" id="resultEngine"></span>
     </div>
   </div>
 
   <!-- History -->
-  <div id="history" style="display:none;margin-top:4px">
-    <button onclick="toggleHistory()" style="background:none;border:none;color:var(--text-tertiary);font-size:13px;cursor:pointer;width:100%;text-align:center;padding:8px">
-      📜 翻譯紀錄 ▾
+  <div class="history-section">
+    <button class="history-toggle" id="historyToggle" onclick="toggleHistory()">
+      📜 翻譯紀錄 <span id="historyCount"></span>
     </button>
-    <div id="historyList" style="display:none"></div>
+    <div class="history-list" id="historyList"></div>
   </div>
-  </div>
+
+  <!-- Share App -->
+  <button onclick="shareApp()" style="background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;cursor:pointer;color:var(--text-secondary);transition:background .15s;width:100%;-webkit-tap-highlight-color:transparent">
+    📤 分享給朋友
+  </button>
 </main>
 
-<!-- ===== FOOTER ===== -->
-<div class="footer">金鑰僅儲存在本機瀏覽器 · 不良者.惡ク男</div>
+<!-- FOOTER -->
+<div class="footer">
+  <span>八方帶財</span>
+  <span class="dot">·</span>
+  <span class="version">v4.0</span>
+  <span class="dot">·</span>
+  <span>金鑰僅在本地</span>
+</div>
+
+<!-- ===== ONBOARDING OVERLAY ===== -->
+<div class="onboard-overlay" id="onboard">
+  <div class="onboard-card" onclick="event.stopPropagation()">
+    <img class="onboard-logo" src="logo.svg" alt="八方帶財">
+    <div class="onboard-title">八方帶財</div>
+    <div class="onboard-sub">泰文 ↔ 繁體中文翻譯工具<br>支援 Gemini 與 Agnes 雙引擎</div>
+    <div class="onboard-steps">
+      <div class="onboard-step">
+        <div class="num">1</div>
+        <div class="desc"><strong>貼上泰文</strong> — 將泰文文字貼入輸入框</div>
+      </div>
+      <div class="onboard-step">
+        <div class="num">2</div>
+        <div class="desc">按 <strong>翻譯</strong> 或快捷鍵 <strong>⌘+↵</strong></div>
+      </div>
+      <div class="onboard-step">
+        <div class="num">3</div>
+        <div class="desc">結果可 <strong>一鍵複製</strong>，記錄自動保存</div>
+      </div>
+      <div class="onboard-step">
+        <div class="num">4</div>
+        <div class="desc">點右上 ⚙️ 可切換 Agnes 引擎或設定金鑰</div>
+      </div>
+    </div>
+    <button class="onboard-btn" onclick="dismissOnboarding()">開始使用 ✨</button>
+    <button class="onboard-skip" onclick="dismissOnboarding(true)">加入主畫面更方便 →</button>
+  </div>
+</div>
+
+<!-- ===== INSTALL GUIDE (iOS) ===== -->
+<div class="install-guide" id="installGuide">
+  <h3>📲 加入主畫面</h3>
+  <p>將八方帶財加入 iPhone 主畫面，使用起來更像原廠 App</p>
+  <div class="steps">
+    <div class="step">
+      <div class="icon">📱</div>
+      <div>點下方分享按鈕 <strong>□↑</strong></div>
+    </div>
+    <div class="step">
+      <div class="icon">🏠</div>
+      <div>往下滑選 <strong>加入主畫面</strong></div>
+    </div>
+    <div class="step">
+      <div class="icon">✅</div>
+      <div>按右上「加入」完成</div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn-primary-sm" onclick="closeInstallGuide()">我知道了</button>
+    <button class="btn-ghost-sm" onclick="closeInstallGuide()">✕ 關閉</button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
 
 <!-- ===== SETTINGS PANEL ===== -->
 <div class="overlay" id="settings" onclick="if(event.target===this)closeSettings()">
@@ -586,7 +733,7 @@ main {
     <div class="panel-group">
       <label class="panel-label">翻譯引擎</label>
       <div class="panel-btns" style="margin-bottom:16px">
-        <button class="btn-provider" id="prov-gemini" onclick="switchProvider('gemini')">Gemini ⭐</button>
+        <button class="btn-provider" id="prov-gemini" onclick="switchProvider('gemini')">Gemini</button>
         <button class="btn-provider" id="prov-agnes" onclick="switchProvider('agnes')">Agnes</button>
       </div>
 
@@ -599,7 +746,7 @@ main {
           onclick="toggleKeyVis()">👁️</button>
       </div>
       <div class="panel-hint">
-        金鑰僅存在此瀏覽器，直接送至 Gemini API，不會經過第三方伺服器。
+        金鑰僅存在此瀏覽器，直接送至 API，不會經過第三方伺服器。
       </div>
       <div class="panel-btns">
         <button class="btn-ghost" onclick="verifyKey()">驗證連線</button>
@@ -613,31 +760,31 @@ main {
     <div class="panel-group">
       <label class="panel-label">應用程式資訊</label>
       <div class="app-info">
-        <div>版本：3.1 · 雙 API 支援</div>
-        <div id="swInfo">Service Worker：檢查中...</div>
-        <div style="margin-top:4px" id="currentProvider">使用引擎：Gemini</div>
+        <span>八方帶財 v4.0</span>
+        <span id="swInfo">Service Worker：檢查中...</span>
+        <span style="margin-top:4px" id="currentProvider">使用引擎：Gemini</span>
       </div>
       <div class="panel-btns">
         <button class="btn-ghost" onclick="checkUpdate()">檢查更新</button>
+        <button class="btn-ghost" onclick="shareApp()" style="flex:1">📤 分享</button>
       </div>
     </div>
 
     <hr class="divider">
 
     <div class="panel-group">
-      <button class="btn-ghost" style="width:100%;padding:10px;text-align:center;font-size:14px"
+      <button class="btn-ghost" style="width:100%;padding:10px;text-align:center;font-size:14px;color:var(--error)"
         onclick="clearAll()">清除所有資料</button>
     </div>
 
-    <!-- invisible close zone -->
     <div style="height:20px"></div>
   </div>
 </div>
 
 <script>
 /* ============================================
-   Thai → ZH-TW Translator PWA v3
-   繁體中文介面 · App Shell · Gemini + Agnes
+   八方帶財 — Thai → ZH-TW Translator PWA
+   v4.0
    ============================================ */
 
 // --- API Providers ---
@@ -645,10 +792,7 @@ const PROVIDERS = {
   gemini: {
     name: 'Gemini',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
-    headers: (key) => ({
-      'Content-Type': 'application/json',
-      'X-goog-api-key': key
-    }),
+    headers: (key) => ({ 'Content-Type': 'application/json', 'X-goog-api-key': key }),
     body: (messages) => ({
       contents: messages.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
@@ -662,10 +806,7 @@ const PROVIDERS = {
   agnes: {
     name: 'Agnes',
     url: 'https://apihub.agnes-ai.com/v1/chat/completions',
-    headers: (key) => ({
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + key
-    }),
+    headers: (key) => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key }),
     body: (messages) => ({
       model: 'agnes-2.0-flash',
       messages: messages,
@@ -693,7 +834,7 @@ const SYSTEM_PROMPT = `[ROLE]
 
 // --- State ---
 let savedKey = {
-  gemini: localStorage.getItem('gemini_api_key') || 'AIzaSyDkASg8yJQEuY66VHMqhAAGQo6WYtHUdHU',
+  gemini: localStorage.getItem('gemini_api_key') || 'AIzaSy...UdHU',
   agnes: localStorage.getItem('agnes_api_key') || ''
 };
 let activeProvider = localStorage.getItem('active_provider') || 'gemini';
@@ -713,25 +854,52 @@ const charCount = $('charCount');
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
   initSW();
-  if (savedKey.gemini && input.value.trim()) {
-    charCount.textContent = input.value.length + ' 字';
+  updateEngineBadge();
+  loadHistory();
+
+  // First visit? Show onboarding
+  if (!localStorage.getItem('onboarded_v4')) {
+    setTimeout(() => $('onboard').classList.add('show'), 300);
+  } else {
+    $('welcomeHint').style.display = 'block';
+    setTimeout(() => { $('welcomeHint').style.display = 'none'; }, 4000);
   }
+
+  // Check if iOS Safari (show install guide)
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafari = /safari/i.test(navigator.userAgent) && !/chrome|fx|edg|opr/i.test(navigator.userAgent);
+  const inStandalone = window.navigator.standalone;
+  if (isIOS && isSafari && !inStandalone && localStorage.getItem('install_guide_dismissed') !== 'true') {
+    setTimeout(() => $('installGuide').classList.add('show'), 1500);
+  }
+
+  if (savedKey.gemini && input.value.trim()) {
+    charCount.textContent = input.value.length;
+  }
+});
+
+// Keyboard shortcut
+input.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    translate2();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('settings').classList.contains('show')) closeSettings();
+  if (e.key === 'Escape' && $('onboard').classList.contains('show')) dismissOnboarding();
+  if (e.key === 'Escape' && $('installGuide').classList.contains('show')) closeInstallGuide();
 });
 
 // ============ SERVICE WORKER ============
 async function initSW() {
   if (!('serviceWorker' in navigator)) {
-    $('swInfo').textContent = 'Service Worker：❌ 此瀏覽器不支援';
+    $('swInfo').textContent = 'Service Worker：❌ 不支援';
     return;
   }
   try {
-    const reg = await navigator.serviceWorker.register('service-worker.js', {
-      scope: '/thai-zh-pwa/'
-    });
-    $('swInfo').textContent = 'Service Worker：✅ 已註冊 (v2)';
-    reg.addEventListener('updatefound', () => {
-      $('swInfo').textContent = 'Service Worker：🔄 發現新版本';
-    });
+    const reg = await navigator.serviceWorker.register('service-worker.js', { scope: '/thai-zh-pwa/' });
+    $('swInfo').textContent = 'Service Worker：✅ 已註冊';
   } catch(e) {
     $('swInfo').textContent = 'Service Worker：❌ ' + e.message;
   }
@@ -742,7 +910,7 @@ async function checkUpdate() {
   const reg = await navigator.serviceWorker.getRegistration();
   if (reg) {
     await reg.update();
-    alert('✅ 已檢查更新，若無反應則為最新版本');
+    showToast('✅ 已檢查更新');
   }
 }
 
@@ -750,12 +918,71 @@ async function checkUpdate() {
 window.addEventListener('offline', () => $('offline-banner').classList.add('show'));
 window.addEventListener('online', () => $('offline-banner').classList.remove('show'));
 
+// ============ ONBOARDING ============
+function showOnboarding() {
+  $('onboard').classList.add('show');
+}
+function dismissOnboarding(showInstall) {
+  $('onboard').classList.remove('show');
+  localStorage.setItem('onboarded_v4', 'true');
+  if (showInstall) {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS && !window.navigator.standalone) {
+      $('installGuide').classList.add('show');
+    }
+  }
+}
+
+// ============ INSTALL GUIDE ============
+function closeInstallGuide() {
+  $('installGuide').classList.remove('show');
+  localStorage.setItem('install_guide_dismissed', 'true');
+}
+
 // ============ INPUT ============
 function onInput() {
   const len = input.value.length;
-  charCount.textContent = len + ' 字';
+  charCount.textContent = len;
+  $('clearBtn').classList.toggle('show', len > 0);
   if (resultDiv.classList.contains('show')) resultDiv.classList.remove('show');
   if (errorDiv.classList.contains('show')) errorDiv.classList.remove('show');
+}
+function clearInput() {
+  input.value = '';
+  onInput();
+  input.focus();
+}
+
+// ============ SAMPLE ============
+const SAMPLES = [
+  'สวัสดีครับ วันนี้อากาศดีมากเลย',
+  'ขอบคุณมากนะคะที่ช่วยเหลือกันมาโดยตลอด',
+  'รักนะ จุ๊บๆ',
+  'เมื่อวานไปกินข้าวกับเพื่อนที่สยามพารากอน อร่อยมาก',
+  'ผมขอโทษที่ทำให้เสียเวลานะครับ'
+];
+function fillSample() {
+  input.value = SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
+  onInput();
+}
+
+// ============ SHARE ============
+async function shareApp() {
+  const shareData = {
+    title: '八方帶財 — 泰文翻譯',
+    text: '🇹🇭→🇹🇼 泰文翻譯工具，支援 Gemini 跟 Agnes 雙引擎，免費好用！',
+    url: 'https://lucien-1127.github.io/thai-zh-pwa/'
+  };
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch(e) {
+      if (e.name !== 'AbortError') showToast('📤 複製連結完成');
+    }
+  } else {
+    await navigator.clipboard.writeText(shareData.url);
+    showToast('🔗 連結已複製，可以貼給朋友！');
+  }
 }
 
 // ============ TRANSLATION ============
@@ -777,6 +1004,11 @@ async function translate2() {
   loading.classList.add('show');
   resultDiv.classList.remove('show');
   errorDiv.classList.remove('show');
+
+  const start = Date.now();
+  const elInt = setInterval(() => {
+    $('elapsed').textContent = ((Date.now() - start) / 1000).toFixed(1) + 's';
+  }, 100);
 
   try {
     const systemMsg = { role: 'system', content: SYSTEM_PROMPT };
@@ -800,6 +1032,9 @@ async function translate2() {
     resultDiv.classList.add('show');
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
+    // Save to history
+    addHistory(text, translated.trim(), provider.name);
+
   } catch(e) {
     if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
       showError('🌐 網路連線失敗，請確認網路後重試');
@@ -810,6 +1045,7 @@ async function translate2() {
     }
   }
 
+  clearInterval(elInt);
   loading.classList.remove('show');
   btn.disabled = false;
   busy = false;
@@ -827,11 +1063,7 @@ async function copyResult() {
   if (!text) return;
   try {
     await navigator.clipboard.writeText(text);
-    const btn = document.querySelector('.result-btn');
-    const orig = btn.textContent;
-    btn.textContent = '✅ 已複製';
-    clearTimeout(copyTimeout);
-    copyTimeout = setTimeout(() => { btn.textContent = orig; }, 1500);
+    showToast('✅ 已複製');
   } catch {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -839,7 +1071,66 @@ async function copyResult() {
     ta.select();
     document.execCommand('copy');
     ta.remove();
+    showToast('✅ 已複製');
   }
+}
+
+// ============ HISTORY ============
+function addHistory(source, target, engine) {
+  let hist = JSON.parse(localStorage.getItem('trans_history') || '[]');
+  hist.unshift({
+    source: source.slice(0, 200),
+    target: target.slice(0, 200),
+    engine: engine,
+    time: Date.now()
+  });
+  if (hist.length > 50) hist = hist.slice(0, 50);
+  localStorage.setItem('trans_history', JSON.stringify(hist));
+  loadHistory();
+}
+
+function loadHistory() {
+  const hist = JSON.parse(localStorage.getItem('trans_history') || '[]');
+  const list = $('historyList');
+  const toggle = $('historyToggle');
+
+  if (hist.length === 0) {
+    toggle.innerHTML = '📜 尚無翻譯紀錄';
+    list.innerHTML = '';
+    list.classList.remove('show');
+    return;
+  }
+
+  $('historyCount').textContent = `(${hist.length})`;
+
+  list.innerHTML = hist.map((h, i) => `
+    <div class="history-item" onclick="restoreHistory(${i})">
+      <div class="h-source">${escHtml(h.source)}</div>
+      <div class="h-target">${escHtml(h.target)}</div>
+    </div>
+  `).join('');
+}
+
+function toggleHistory() {
+  const list = $('historyList');
+  list.classList.toggle('show');
+  const btn = $('historyToggle');
+  btn.textContent = list.classList.contains('show') ? '📜 收起紀錄 ▲' : '📜 翻譯紀錄 ' + $('historyCount').textContent;
+}
+
+function restoreHistory(idx) {
+  const hist = JSON.parse(localStorage.getItem('trans_history') || '[]');
+  if (!hist[idx]) return;
+  input.value = hist[idx].source;
+  onInput();
+  toggleHistory();
+  translate2();
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 // ============ SETTINGS ============
@@ -859,38 +1150,39 @@ function toggleKeyVis() {
 }
 
 function switchProvider(name) {
-  // Save current key first
   const currentKey = $('apikey').value.trim();
   if (currentKey) savedKey[activeProvider] = currentKey;
 
   activeProvider = name;
   localStorage.setItem('active_provider', name);
 
-  // Load key for new provider
   $('apikey').value = savedKey[name] || '';
   $('apikey').placeholder = PROVIDERS[name].keyPlaceholder;
   $('keyLabel').textContent = PROVIDERS[name].keyLabel;
   $('currentProvider').textContent = '使用引擎：' + PROVIDERS[name].name;
 
-  // Update hint text
   const hints = {
     gemini: '金鑰僅存在此瀏覽器，直接送至 Gemini API，不會經過第三方伺服器。',
     agnes: '金鑰僅存在此瀏覽器，每次翻譯請求直接送至 Agnes API，不會經過第三方伺服器。'
   };
   document.querySelector('.panel-hint').textContent = hints[name] || '';
-
   updateProviderUI();
-  // Clear previous status
   document.getElementById('keyStatus').classList.remove('show');
 }
 
 function updateProviderUI() {
   document.querySelectorAll('.btn-provider').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('prov-' + activeProvider);
-  if (btn) btn.classList.add('active');
+  const el = document.getElementById('prov-' + activeProvider);
+  if (el) el.classList.add('active');
   $('currentProvider').textContent = '使用引擎：' + PROVIDERS[activeProvider].name;
   $('apikey').placeholder = PROVIDERS[activeProvider].keyPlaceholder;
   $('keyLabel').textContent = PROVIDERS[activeProvider].keyLabel;
+  updateEngineBadge();
+}
+
+function updateEngineBadge() {
+  const names = { gemini: 'Gemini', agnes: 'Agnes' };
+  $('engineBadge').textContent = names[activeProvider] || 'Gemini';
 }
 
 function saveKey() {
@@ -908,11 +1200,11 @@ function saveKey() {
   }
   setTimeout(() => closeSettings(), 800);
 }
+
 async function verifyKey() {
   const key = $('apikey').value.trim();
   const provider = PROVIDERS[activeProvider];
   if (!key) { showKeyStatus('請先貼入金鑰', 'fail'); return; }
-
   showKeyStatus('驗證中...', 'ok');
   try {
     const testMsg = { role: 'user', content: 'ok' };
@@ -930,6 +1222,7 @@ async function verifyKey() {
     showKeyStatus('❌ 無法連線：' + e.message, 'fail');
   }
 }
+
 function showKeyStatus(msg, type) {
   const el = $('keyStatus');
   el.textContent = msg;
@@ -937,33 +1230,33 @@ function showKeyStatus(msg, type) {
 }
 
 function clearAll() {
-  if (!confirm('確定要清除所有資料（含兩組金鑰與快取）？')) return;
+  if (!confirm('確定要清除所有資料（含金鑰、快取與翻譯紀錄）？')) return;
   localStorage.removeItem('gemini_api_key');
   localStorage.removeItem('agnes_api_key');
   localStorage.removeItem('active_provider');
+  localStorage.removeItem('trans_history');
   savedKey = { gemini: '', agnes: '' };
   activeProvider = 'gemini';
   $('apikey').value = '';
   updateProviderUI();
   showKeyStatus('已清除所有資料', 'ok');
+  loadHistory();
   if ('caches' in window) {
     caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   }
 }
 
-// ============ KEYBOARD ============
-input.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    e.preventDefault();
-    translate2();
-  }
-});
-
-// Close settings on Escape
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('settings').classList.contains('show')) closeSettings();
-});
+// ============ TOAST ============
+function showToast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.style.display = 'block';
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { el.style.display = 'none'; }, 300);
+  }, 2000);
+}
 </script>
 </body>
 </html>
-
