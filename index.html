@@ -2,131 +2,382 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#111827">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<!-- PWA: iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TH↔ZH">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- PWA: general -->
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="description" content="泰文翻譯繁體中文 — 專業泰國本地用語即時翻譯">
 <title>แปลไทย → 中文</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* === RESET === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === VARIABLES === */
+:root {
+  --bg: #111827;
+  --surface: #1f2937;
+  --border: #374151;
+  --text: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --error: #f87171;
+  --error-bg: #450a0a;
+  --radius: 12px;
+}
+
+/* === BASE === */
 body {
-  font-family: -apple-system, 'Noto Sans Thai', 'Noto Sans TC', sans-serif;
-  background: #111827; color: #f3f4f6;
-  min-height: 100dvh; display: flex; flex-direction: column;
+  font-family: -apple-system, 'Noto Sans Thai', 'Noto Sans TC', 'PingFang TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  /* safe area for notch phones */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
-header {
-  padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid #1f2937;
+
+/* === HEADER (App Shell) === */
+.app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border);
+  -webkit-user-select: none;
+  user-select: none;
+  flex-shrink: 0;
 }
-header h1 { font-size: 17px; font-weight: 600; letter-spacing: 1px; -webkit-user-select: none; }
-.settings-btn {
-  background: none; border: none; color: #9ca3af; font-size: 24px;
-  cursor: pointer; padding: 4px 8px; -webkit-tap-highlight-color: transparent;
+.app-bar__title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
-main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-textarea {
-  width: 100%; min-height: 160px; resize: vertical;
-  background: #1f2937; color: #f3f4f6; border: 1px solid #374151;
-  border-radius: 12px; padding: 16px; font-size: 16px;
-  line-height: 1.6; font-family: inherit; outline: none;
-}
-textarea:focus { border-color: #6366f1; }
-.btn {
-  width: 100%; padding: 14px; border: none; border-radius: 12px;
-  font-size: 17px; font-weight: 600; cursor: pointer; transition: .2s;
+.app-bar__title span { color: var(--text-secondary); }
+.app-bar__actions { display: flex; gap: 4px; }
+.icon-btn {
+  background: none; border: none; color: var(--text-secondary);
+  font-size: 22px; padding: 6px 8px; cursor: pointer;
+  border-radius: 8px; transition: background .15s;
   -webkit-tap-highlight-color: transparent;
 }
-.btn-primary { background: #6366f1; color: #fff; }
-.btn-primary:active { transform: scale(0.97); background: #4f46e5; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-#result {
-  background: #1f2937; border-radius: 12px; padding: 16px;
-  min-height: 60px; font-size: 16px; line-height: 1.7; white-space: pre-wrap;
-  display: none; border: 1px solid #374151;
+.icon-btn:active { background: var(--surface); }
+
+/* === MAIN CONTENT === */
+main {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-#result.show { display: block; }
+
+/* === TEXTAREA === */
+.input-area {
+  position: relative;
+}
+textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 16px;
+  line-height: 1.7;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+}
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: #6b7280; }
+
+.char-count {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: 11px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+/* === TRANSLATE BUTTON === */
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .15s, opacity .2s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* === LOADING === */
 #loading {
-  display: none; text-align: center; padding: 16px; color: #9ca3af; font-size: 14px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
-#loading.show { display: block; }
+#loading.show { display: flex; }
 .spinner {
-  display: inline-block; width: 18px; height: 18px;
-  border: 2px solid #374151; border-top-color: #6366f1;
-  border-radius: 50%; animation: spin .8s linear infinite;
-  vertical-align: middle; margin-right: 6px;
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-#error { color: #f87171; font-size: 14px; display: none; padding: 10px; border-radius: 8px; background: #1f2937; border: 1px solid #7f1d1d; }
-#error.show { display: block; }
-.footer { text-align: center; padding: 12px; font-size: 12px; color: #6b7280; }
 
+/* === ERROR === */
+#error {
+  display: none;
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid #7f1d1d;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.5;
+}
+#error.show { display: block; }
+
+/* === RESULT === */
+#result {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 16px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  position: relative;
+}
+#result.show { display: block; }
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--border);
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .2s;
+}
+#result:hover .copy-btn,
+.copy-btn:focus { opacity: 1; }
+
+/* === OFFLINE BANNER === */
+#offline-banner {
+  display: none;
+  background: #78350f;
+  color: #fbbf24;
+  text-align: center;
+  padding: 6px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+#offline-banner.show { display: block; }
+
+/* === FOOTER === */
+.footer {
+  text-align: center;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  font-size: 11px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+/* === SETTINGS PANEL === */
 .overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-  z-index: 10; justify-content: center; align-items: flex-end;
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  justify-content: center;
+  align-items: flex-end;
 }
 .overlay.show { display: flex; }
 .panel {
-  background: #1f2937; width: 100%; max-width: 500px;
-  border-radius: 16px 16px 0 0; padding: 20px; animation: slideUp .25s ease;
-  max-height: 80vh; overflow-y: auto;
+  background: var(--surface);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px 16px 0 0;
+  padding: 24px;
+  animation: slideUp .25s ease;
+  max-height: 85vh;
+  overflow-y: auto;
 }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.panel h2 { font-size: 16px; margin-bottom: 16px; color: #d1d5db; }
-.panel label { font-size: 13px; color: #9ca3af; display: block; margin-bottom: 6px; }
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.panel h2 { font-size: 16px; margin-bottom: 16px; }
+.panel label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 6px;
+}
 .panel input {
-  width: 100%; padding: 12px; background: #111827; color: #f3f4f6;
-  border: 1px solid #374151; border-radius: 8px; font-size: 14px; outline: none;
+  width: 100%;
+  padding: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
   font-family: monospace;
 }
-.panel input:focus { border-color: #6366f1; }
-.panel .hint { font-size: 12px; color: #6b7280; margin: 8px 0 16px; }
-.panel .row { display: flex; gap: 8px; align-items: center; }
+.panel input:focus { border-color: var(--accent); }
+.panel .hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 8px 0 16px;
+}
+.panel .row { display: flex; gap: 8px; }
 .panel .row .btn { flex: 1; padding: 10px; font-size: 14px; }
-.btn-secondary { background: #374151; color: #f3f4f6; }
-.status { font-size: 13px; margin-top: 8px; padding: 8px; border-radius: 6px; display: none; }
+.btn-ghost {
+  background: var(--border);
+  color: var(--text);
+}
+.status {
+  font-size: 13px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: none;
+}
 .status.show { display: block; }
 .status.ok { background: #064e3b; color: #6ee7b7; }
-.status.fail { background: #450a0a; color: #fca5a5; }
+.status.fail { background: var(--error-bg); color: var(--error); }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🇹🇭 แปลไทย → 中文 🇹🇼</h1>
-  <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+<!-- Offline Banner (App Shell) -->
+<div id="offline-banner">📡 離線模式 — 部分功能可能受限</div>
+
+<!-- App Bar (App Shell) -->
+<header class="app-bar">
+  <div class="app-bar__title">🇹🇭 <span>→</span> 中文 🇹🇼</div>
+  <div class="app-bar__actions">
+    <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
+  </div>
 </header>
 
+<!-- Main Content -->
 <main>
-  <textarea id="input" placeholder="貼上泰文...&#10;วางข้อความภาษาไทยที่นี่"
-    oninput="clearResult()"></textarea>
-  <button class="btn btn-primary" id="btn" onclick="translate2()">翻譯 แปล</button>
-  <div id="loading"><span class="spinner"></span>翻譯中...</div>
+  <!-- Input -->
+  <div class="input-area">
+    <textarea id="input" placeholder="貼上泰文..."
+      oninput="onInput()"></textarea>
+    <div class="char-count" id="charCount">0</div>
+  </div>
+
+  <!-- Translate Button -->
+  <button class="btn btn-primary" id="btn" onclick="translate2()">
+    <span>翻譯</span>
+    <span style="font-size:14px;opacity:0.7">แปล</span>
+  </button>
+
+  <!-- Loading State -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <span>翻譯中...</span>
+  </div>
+
+  <!-- Error State -->
   <div id="error"></div>
-  <div id="result"></div>
+
+  <!-- Result -->
+  <div id="result">
+    <button class="copy-btn" onclick="copyResult()">📋 複製</button>
+    <div id="resultText"></div>
+  </div>
 </main>
 
+<!-- Footer -->
 <div class="footer">กุญแจ API ถูกเก็บไว้ในเครื่องคุณเท่านั้น</div>
 
-<div class="overlay" id="settings">
-  <div class="panel">
+<!-- Settings Panel -->
+<div class="overlay" id="settings" onclick="closeOnBg(event)">
+  <div class="panel" onclick="event.stopPropagation()">
     <h2>⚙️ 設定</h2>
     <label>Agnes API 金鑰</label>
     <div class="row">
-      <input type="password" id="apikey" placeholder="cpk-xxxxxxxxxxxxxxxxxxxx" spellcheck="false">
-      <button class="btn btn-secondary" style="flex:0;padding:10px 14px;font-size:13px" onclick="toggleKeyVis()">👁️</button>
+      <input type="password" id="apikey"
+        placeholder="cpk-xxxxxxxxxxxxxxxxxxxx" spellcheck="false">
+      <button class="btn btn-ghost" style="flex:0;padding:10px 14px"
+        onclick="toggleKeyVis()">👁️</button>
     </div>
-    <div class="hint">金鑰只存在你的瀏覽器 localStorage，不會外傳</div>
+    <div class="hint">金鑰只存在你的瀏覽器，不會外傳</div>
     <div class="row">
-      <button class="btn btn-secondary" onclick="verifyKey()">驗證</button>
+      <button class="btn btn-ghost" onclick="verifyKey()">驗證</button>
       <button class="btn btn-primary" onclick="saveKey()">儲存</button>
     </div>
     <div class="status" id="keyStatus"></div>
+
+    <hr style="border-color:var(--border);margin:20px 0">
+
+    <label>App 版本</label>
+    <div style="color:var(--text-secondary);font-size:13px;">
+      v2.0 · Service Worker 已註冊
+      <span id="swStatus"></span>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:10px;"
+      onclick="updateSW()">檢查更新</button>
   </div>
 </div>
 
 <script>
+/* ============================================
+   Thai → ZH-TW Translator PWA v2
+   Architecture: App Shell + Network-first API
+   ============================================ */
+
+// === CONSTANTS ===
 const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
 const MODEL = 'agnes-2.0-flash';
 const SYSTEM = `[ROLE]
@@ -142,100 +393,223 @@ const SYSTEM = `[ROLE]
 4. 泰文專有名詞保持音譯 + 中文備註
 5. 翻譯完要像台灣人寫的中文，不是翻譯腔`;
 
+// === STATE ===
 let savedKey = localStorage.getItem('agnes_api_key') || '';
-
-function toggleSettings() {
-  const p = document.getElementById('settings');
-  p.classList.toggle('show');
-  if (p.classList.contains('show'))
-    document.getElementById('apikey').value = savedKey;
-}
-
-function toggleKeyVis() {
-  const el = document.getElementById('apikey');
-  el.type = el.type === 'password' ? 'text' : 'password';
-}
-
-function saveKey() {
-  const key = document.getElementById('apikey').value.trim();
-  if (key) { localStorage.setItem('agnes_api_key', key); savedKey = key; showStatus('✅ 已儲存', 'ok'); }
-  else { localStorage.removeItem('agnes_api_key'); savedKey = ''; showStatus('已清除', 'ok'); }
-}
-
-async function verifyKey() {
-  const key = document.getElementById('apikey').value.trim();
-  if (!key) { showStatus('請填入金鑰', 'fail'); return; }
-  showStatus('驗證中...', 'ok');
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key},
-      body: JSON.stringify({model: MODEL, messages: [{role: 'user', content: 'hi'}], max_tokens: 5})
-    });
-    if (res.ok) showStatus('✅ 金鑰有效', 'ok');
-    else showStatus('❌ ' + (await res.json()).error?.message || '金鑰無效', 'fail');
-  } catch(e) { showStatus('連線失敗：' + e.message, 'fail'); }
-}
-
-function showStatus(msg, type) {
-  const el = document.getElementById('keyStatus');
-  el.textContent = msg; el.className = 'status show ' + type;
-}
-
 let busy = false;
+
+// === DOM REFS ===
+const $ = id => document.getElementById(id);
+const input = $('input');
+const btn = $('btn');
+const loading = $('loading');
+const result = $('result');
+const resultText = $('resultText');
+const error = $('error');
+const charCount = $('charCount');
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded', () => {
+  registerSW();
+});
+
+// === SERVICE WORKER ===
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) {
+    $('swStatus').textContent = '· ❌ 不支援';
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.register('service-worker.js', {
+      scope: '/thai-zh-pwa/'
+    });
+    $('swStatus').textContent = '· ✅ v2';
+    // Check for updates
+    reg.addEventListener('updatefound', () => {
+      console.log('[SW] Update found');
+    });
+  } catch(e) {
+    $('swStatus').textContent = '· ❌ ' + e.message;
+  }
+}
+
+async function updateSW() {
+  if (!('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.getRegistration();
+  if (reg) {
+    await reg.update();
+    alert('已檢查更新');
+  }
+}
+
+// === OFFLINE DETECTION ===
+window.addEventListener('offline', () => {
+  $('offline-banner').classList.add('show');
+});
+window.addEventListener('online', () => {
+  $('offline-banner').classList.remove('show');
+});
+
+// === INPUT ===
+function onInput() {
+  const len = input.value.length;
+  charCount.textContent = len > 999 ? '999+' : len;
+  // Clear previous result on new input
+  if (result.classList.contains('show')) {
+    result.classList.remove('show');
+  }
+  if (error.classList.contains('show')) {
+    error.classList.remove('show');
+  }
+}
+
+// === TRANSLATION ===
 async function translate2() {
   if (busy) return;
-  const text = document.getElementById('input').value.trim();
+  const text = input.value.trim();
   if (!text) return;
+
   const key = savedKey || localStorage.getItem('agnes_api_key');
   if (!key) {
-    const err = document.getElementById('error');
-    err.textContent = '⚠️ 請先點 ⚙️ 設定 API 金鑰';
-    err.classList.add('show'); return;
+    showError('⚠️ 請先點 ⚙️ 設定 API 金鑰');
+    return;
   }
+
   busy = true;
-  const btn = document.getElementById('btn');
-  const loading = document.getElementById('loading');
-  const result = document.getElementById('result');
-  const err = document.getElementById('error');
-  btn.disabled = true; loading.classList.add('show');
-  result.classList.remove('show'); err.classList.remove('show');
+  btn.disabled = true;
+  loading.classList.add('show');
+  result.classList.remove('show');
+  error.classList.remove('show');
+
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          {role: 'system', content: SYSTEM},
-          {role: 'user', content: '原文：\n' + text}
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: '原文：\n' + text }
         ],
         temperature: 0.3,
         max_tokens: 4096
       })
     });
+
     if (!res.ok) {
-      const e = await res.json();
-      err.textContent = 'API 錯誤：' + (e.error?.message || res.statusText);
-      err.classList.add('show');
-    } else {
-      const data = await res.json();
-      result.textContent = data.choices[0].message.content.trim();
-      result.classList.add('show');
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error?.message || res.statusText);
     }
+
+    const data = await res.json();
+    resultText.textContent = data.choices[0].message.content.trim();
+    result.classList.add('show');
+
   } catch(e) {
-    err.textContent = '連線失敗：' + e.message;
-    err.classList.add('show');
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      showError('🌐 網路連線失敗，請檢查網路後重試');
+    } else {
+      showError('❌ ' + e.message);
+    }
   }
-  loading.classList.remove('show'); btn.disabled = false; busy = false;
+
+  loading.classList.remove('show');
+  btn.disabled = false;
+  busy = false;
 }
 
-function clearResult() {
-  document.getElementById('result').classList.remove('show');
-  document.getElementById('error').classList.remove('show');
+function showError(msg) {
+  error.textContent = msg;
+  error.classList.add('show');
 }
-document.getElementById('input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) translate2();
+
+// === COPY ===
+async function copyResult() {
+  const text = resultText.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ 已複製';
+    setTimeout(() => { btn.textContent = '📋 複製'; }, 1500);
+  } catch {
+    alert('複製失敗，請手動選取');
+  }
+}
+
+// === SETTINGS ===
+function toggleSettings() {
+  $('settings').classList.toggle('show');
+  if ($('settings').classList.contains('show')) {
+    $('apikey').value = savedKey;
+  }
+}
+
+function closeOnBg(e) {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.remove('show');
+  }
+}
+
+function toggleKeyVis() {
+  const el = $('apikey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function saveKey() {
+  const key = $('apikey').value.trim();
+  if (key) {
+    localStorage.setItem('agnes_api_key', key);
+    savedKey = key;
+    showKeyStatus('✅ 已儲存', 'ok');
+  } else {
+    localStorage.removeItem('agnes_api_key');
+    savedKey = '';
+    showKeyStatus('已清除', 'ok');
+  }
+}
+
+async function verifyKey() {
+  const key = $('apikey').value.trim();
+  if (!key) { showKeyStatus('請填入金鑰', 'fail'); return; }
+
+  showKeyStatus('驗證中...', 'ok');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'user', content: 'hi' }],
+        max_tokens: 5
+      })
+    });
+    if (res.ok) showKeyStatus('✅ 金鑰有效', 'ok');
+    else {
+      const e = await res.json().catch(() => ({}));
+      showKeyStatus('❌ ' + (e.error?.message || '無效'), 'fail');
+    }
+  } catch(e) {
+    showKeyStatus('連線失敗：' + e.message, 'fail');
+  }
+}
+
+function showKeyStatus(msg, type) {
+  const el = $('keyStatus');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+// === KEYBOARD SHORTCUT ===
+input.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    translate2();
+  }
 });
 </script>
 </body>

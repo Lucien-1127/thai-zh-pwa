@@ -1,17 +1,53 @@
 {
-  "name": "แปลไทย → 中文",
+  "name": "แปลไทย → 中文 — Thai to Chinese Translator",
   "short_name": "TH↔ZH",
-  "description": "泰文翻譯繁體中文（個人工具）",
-  "start_url": "/",
+  "description": "泰文翻譯繁體中文 — 專業泰國本地用語，即時翻譯",
+  "start_url": "/thai-zh-pwa/",
+  "scope": "/thai-zh-pwa/",
+  "id": "/thai-zh-pwa/",
   "display": "standalone",
+  "display_override": ["window-control-overlay", "minimal-ui"],
   "background_color": "#111827",
   "theme_color": "#111827",
+  "orientation": "portrait",
+  "categories": ["utilities", "education", "productivity"],
+  "lang": "zh-TW",
+  "dir": "ltr",
   "icons": [
     {
       "src": "icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-narrow.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "翻譯",
+      "short_name": "翻譯",
+      "description": "開啟翻譯",
+      "url": "/thai-zh-pwa/",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
     }
   ]
 }
