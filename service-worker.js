@@ -1,7 +1,7 @@
 // thai-zh-pwa — Service Worker v2
 // Strategy: Cache-First for App Shell, Network-First for API
 
-const CACHE = 'thai-zh-pwa-v2';
+const CACHE = 'thai-zh-pwa-v3';
 const SHELL = [
   '/thai-zh-pwa/',
   '/thai-zh-pwa/index.html',
