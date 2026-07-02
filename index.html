@@ -186,8 +186,29 @@ main {
   position: absolute; bottom: 8px; right: 10px;
   font-size: 11px; color: var(--text-tertiary);
   pointer-events: none;
-  display: flex; gap: 8px; align-items: center;
+  display: flex; gap: 6px; align-items: center;
 }
+.input-meta .mic-btn {
+  pointer-events: auto;
+  background: none; border: none;
+  color: var(--text-tertiary);
+  width: 26px; height: 26px; border-radius: 50%;
+  font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.input-meta .mic-btn:active { background: var(--accent-subtle); color: var(--accent); }
+.input-meta .mic-btn.listening {
+  background: var(--error-bg);
+  color: var(--error);
+  animation: pulseMic 1s ease-in-out infinite;
+}
+@keyframes pulseMic {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.input-meta .mic-btn.supported { display: flex; }
+.input-meta .mic-btn.unsupported { display: none; }
 .input-clear {
   position: absolute; top: 8px; right: 8px;
   background: var(--surface-hover); border: none;
@@ -606,6 +627,7 @@ main {
     <button class="input-clear" id="clearBtn" onclick="clearInput()">✕</button>
     <div class="input-meta">
       <span id="charCount">0</span>
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="語音輸入">🎤</button>
     </div>
   </div>
 
@@ -639,6 +661,7 @@ main {
     </div>
     <div class="result-text" id="resultText"></div>
     <div class="result-actions">
+      <button class="result-btn" onclick="speakResult()" title="朗讀">🔊 朗讀</button>
       <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto" id="resultEngine"></span>
     </div>
   </div>
@@ -773,6 +796,20 @@ main {
     <hr class="divider">
 
     <div class="panel-group">
+      <label class="panel-label">隱私</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+        <span style="font-size:14px">🕶️ 無痕模式</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="incognitoToggle" onchange="toggleIncognito()" style="opacity:0;width:0;height:0">
+          <span style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.3s" id="incogTrack"></span>
+          <span style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:.3s" id="incogThumb"></span>
+        </label>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="panel-group">
       <button class="btn-ghost" style="width:100%;padding:10px;text-align:center;font-size:14px;color:var(--error)"
         onclick="clearAll()">清除所有資料</button>
     </div>
@@ -875,6 +912,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (savedKey.gemini && input.value.trim()) {
     charCount.textContent = input.value.length;
+  }
+
+  // Init mic check
+  setTimeout(initMic, 500);
+  // Restore incognito state
+  if (localStorage.getItem('incognito_mode')) {
+    $('incognitoToggle').checked = true;
+    const track = $('incogTrack');
+    const thumb = $('incogThumb');
+    if (track) { track.style.background = 'var(--accent)'; thumb.style.transform = 'translateX(20px)'; }
+    $('historyToggle').textContent = '🕶️ 無痕模式中';
   }
 });
 
@@ -1077,6 +1125,8 @@ async function copyResult() {
 
 // ============ HISTORY ============
 function addHistory(source, target, engine) {
+  // Don't save in incognito mode
+  if (localStorage.getItem('incognito_mode')) return;
   let hist = JSON.parse(localStorage.getItem('trans_history') || '[]');
   hist.unshift({
     source: source.slice(0, 200),
@@ -1244,6 +1294,94 @@ function clearAll() {
   if ('caches' in window) {
     caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   }
+}
+
+// ============ VOICE INPUT ============
+let recognition = null;
+let isListening = false;
+
+function initMic() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = $('micBtn');
+  if (!SpeechRecognition) {
+    micBtn.classList.add('unsupported');
+    return;
+  }
+  micBtn.classList.add('supported');
+  recognition = new SpeechRecognition();
+  recognition.lang = 'th-TH';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    input.value = text;
+    onInput();
+    showToast('🎤 已辨識：' + text.slice(0, 30) + (text.length > 30 ? '...' : ''));
+  };
+  recognition.onerror = (e) => {
+    stopMic();
+    if (e.error !== 'aborted' && e.error !== 'no-speech') {
+      showToast('❌ 語音辨識失敗：' + e.error);
+    }
+  };
+  recognition.onend = () => {
+    stopMic();
+    // Auto-translate if we got text
+    if (input.value.trim()) translate2();
+  };
+}
+
+function toggleMic() {
+  if (isListening) { stopMic(); return; }
+  if (!recognition) { showToast('❌ 此瀏覽器不支援語音辨識'); return; }
+  isListening = true;
+  $('micBtn').classList.add('listening');
+  recognition.start();
+  showToast('🎤 請說泰文...');
+}
+
+function stopMic() {
+  isListening = false;
+  $('micBtn').classList.remove('listening');
+  try { recognition?.abort(); } catch(e) {}
+}
+
+// ============ TEXT-TO-SPEECH ============
+function speakResult() {
+  const text = resultText.textContent;
+  if (!text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW';
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+  showToast('🔊 朗讀中...');
+}
+
+// ============ INCOGNITO ============
+function toggleIncognito() {
+  const enabled = $('incognitoToggle').checked;
+  localStorage.setItem('incognito_mode', enabled ? 'true' : '');
+  if (enabled) {
+    // Clear visible history
+    $('historyList').innerHTML = '';
+    $('historyList').classList.remove('show');
+    $('historyToggle').innerHTML = '🕶️ 無痕模式中';
+  } else {
+    loadHistory();
+  }
+  // Update toggle visual
+  const track = $('incogTrack');
+  const thumb = $('incogThumb');
+  if (enabled) {
+    track.style.background = 'var(--accent)';
+    thumb.style.transform = 'translateX(20px)';
+  } else {
+    track.style.background = 'var(--border)';
+    thumb.style.transform = 'translateX(0)';
+  }
+  showToast(enabled ? '🕶️ 無痕模式已開啟' : '🕶️ 無痕模式已關閉');
 }
 
 // ============ TOAST ============
