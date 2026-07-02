@@ -124,16 +124,6 @@ body {
 }
 .icon-btn:active { background: var(--accent-subtle); color: var(--accent); transform: scale(0.92); }
 
-/* --- Engine Badge --- */
-.engine-badge {
-  font-size: 10px;
-  background: var(--accent-subtle);
-  color: var(--accent);
-  padding: 2px 8px; border-radius: 20px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
 /* --- Main --- */
 main {
   flex: 1; overflow-y: auto;
@@ -587,18 +577,12 @@ main {
     </div>
   </div>
   <div class="app-bar-actions">
-    <span class="engine-badge" id="engineBadge">Gemini</span>
-    <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
-  </div>
+      <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
+    </div>
 </header>
 
 <!-- MAIN -->
 <main>
-  <!-- Onboarding hint (dismissed after first visit) -->
-  <div id="welcomeHint" style="display:none;background:var(--accent-subtle);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;line-height:1.5;animation:fadeSlideIn .4s ease">
-    ✅ Gemini 金鑰已就緒，貼上泰文即可翻譯！
-  </div>
-
   <!-- Input -->
   <div class="card input-area">
     <textarea id="input" placeholder="在此貼上泰文..."
@@ -661,7 +645,7 @@ main {
 <div class="footer">
   <span>八方帶財</span>
   <span class="dot">·</span>
-  <span class="version">v4.0</span>
+  <span class="version">v4.1</span>
   <span class="dot">·</span>
   <span>金鑰僅在本地</span>
 </div>
@@ -671,7 +655,7 @@ main {
   <div class="onboard-card" onclick="event.stopPropagation()">
     <img class="onboard-logo" src="logo.svg" alt="八方帶財">
     <div class="onboard-title">八方帶財</div>
-    <div class="onboard-sub">泰文 ↔ 繁體中文翻譯工具<br>支援 Gemini 與 Agnes 雙引擎</div>
+    <div class="onboard-sub">泰文 ↔ 繁體中文翻譯工具<br>使用 Perplexity AI</div>
     <div class="onboard-steps">
       <div class="onboard-step">
         <div class="num">1</div>
@@ -687,7 +671,7 @@ main {
       </div>
       <div class="onboard-step">
         <div class="num">4</div>
-        <div class="desc">點右上 ⚙️ 可切換 Agnes 引擎或設定金鑰</div>
+        <div class="desc">點右上 ⚙️ 設定 Perplexity API 金鑰</div>
       </div>
     </div>
     <button class="onboard-btn" onclick="dismissOnboarding()">開始使用 ✨</button>
@@ -731,16 +715,10 @@ main {
     </div>
 
     <div class="panel-group">
-      <label class="panel-label">翻譯引擎</label>
-      <div class="panel-btns" style="margin-bottom:16px">
-        <button class="btn-provider" id="prov-gemini" onclick="switchProvider('gemini')">Gemini</button>
-        <button class="btn-provider" id="prov-agnes" onclick="switchProvider('agnes')">Agnes</button>
-      </div>
-
-      <label class="panel-label" id="keyLabel">Gemini API 金鑰</label>
+      <label class="panel-label">Perplexity API 金鑰</label>
       <div class="panel-input-wrap">
         <input type="password" id="apikey"
-          placeholder="AI..." spellcheck="false"
+                  placeholder="pplx-..." spellcheck="false"
           onkeydown="if(event.key==='Enter')saveKey()">
         <button class="btn-ghost" style="flex:0;padding:12px;font-size:16px"
           onclick="toggleKeyVis()">👁️</button>
@@ -760,9 +738,8 @@ main {
     <div class="panel-group">
       <label class="panel-label">應用程式資訊</label>
       <div class="app-info">
-        <span>八方帶財 v4.0</span>
+        <span>八方帶財 v4.1</span>
         <span id="swInfo">Service Worker：檢查中...</span>
-        <span style="margin-top:4px" id="currentProvider">使用引擎：Gemini</span>
       </div>
       <div class="panel-btns">
         <button class="btn-ghost" onclick="checkUpdate()">檢查更新</button>
@@ -787,36 +764,18 @@ main {
    v4.0
    ============================================ */
 
-// --- API Providers ---
-const PROVIDERS = {
-  gemini: {
-    name: 'Gemini',
-    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
-    headers: (key) => ({ 'Content-Type': 'application/json', 'X-goog-api-key': key }),
-    body: (messages) => ({
-      contents: messages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }))
-    }),
-    extract: (data) => data.candidates?.[0]?.content?.parts?.[0]?.text || '',
-    keyLabel: 'Gemini API 金鑰',
-    keyPlaceholder: 'AI...'
-  },
-  agnes: {
-    name: 'Agnes',
-    url: 'https://apihub.agnes-ai.com/v1/chat/completions',
-    headers: (key) => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key }),
-    body: (messages) => ({
-      model: 'agnes-2.0-flash',
-      messages: messages,
-      temperature: 0.3,
-      max_tokens: 4096
-    }),
-    extract: (data) => data.choices?.[0]?.message?.content || '',
-    keyLabel: 'Agnes API 金鑰',
-    keyPlaceholder: 'cpk-...'
-  }
+// --- API Provider: Perplexity ---
+const PROVIDER = {
+  name: 'Perplexity',
+  url: 'https://api.perplexity.ai/chat/completions',
+  headers: (key) => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key }),
+  body: (messages) => ({
+    model: 'sonar-pro',
+    messages: messages,
+    temperature: 0.3,
+    max_tokens: 4096
+  }),
+  extract: (data) => data.choices?.[0]?.message?.content || ''
 };
 
 const SYSTEM_PROMPT = `[ROLE]
@@ -833,13 +792,8 @@ const SYSTEM_PROMPT = `[ROLE]
 5. 翻譯完要像台灣人寫的中文，不是翻譯腔`;
 
 // --- State ---
-let savedKey = {
-  gemini: localStorage.getItem('gemini_api_key') || 'AIzaSy...UdHU',
-  agnes: localStorage.getItem('agnes_api_key') || ''
-};
-let activeProvider = localStorage.getItem('active_provider') || 'gemini';
+let savedKey = localStorage.getItem('perplexity_api_key') || '';
 let busy = false;
-let copyTimeout = null;
 
 // --- DOM ---
 const $ = id => document.getElementById(id);
@@ -854,15 +808,11 @@ const charCount = $('charCount');
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
   initSW();
-  updateEngineBadge();
   loadHistory();
 
   // First visit? Show onboarding
   if (!localStorage.getItem('onboarded_v4')) {
     setTimeout(() => $('onboard').classList.add('show'), 300);
-  } else {
-    $('welcomeHint').style.display = 'block';
-    setTimeout(() => { $('welcomeHint').style.display = 'none'; }, 4000);
   }
 
   // Check if iOS Safari (show install guide)
@@ -873,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => $('installGuide').classList.add('show'), 1500);
   }
 
-  if (savedKey.gemini && input.value.trim()) {
+  if (savedKey && input.value.trim()) {
     charCount.textContent = input.value.length;
   }
 });
@@ -970,7 +920,7 @@ function fillSample() {
 async function shareApp() {
   const shareData = {
     title: '八方帶財 — 泰文翻譯',
-    text: '🇹🇭→🇹🇼 泰文翻譯工具，支援 Gemini 跟 Agnes 雙引擎，免費好用！',
+    text: '🇹🇭→🇹🇼 泰文翻譯工具，使用 Perplexity AI，免費好用！',
     url: 'https://lucien-1127.github.io/thai-zh-pwa/'
   };
   if (navigator.share) {
@@ -991,10 +941,8 @@ async function translate2() {
   const text = input.value.trim();
   if (!text) { input.focus(); return; }
 
-  const provider = PROVIDERS[activeProvider];
-  const key = savedKey[activeProvider];
-  if (!key) {
-    showError('⚠️ 請先點右上 ⚙️ 設定 ' + provider.name + ' API 金鑰');
+  if (!savedKey) {
+    showError('⚠️ 請先點右上 ⚙️ 設定 Perplexity API 金鑰');
     setTimeout(() => toggleSettings(), 500);
     return;
   }
@@ -1013,10 +961,10 @@ async function translate2() {
   try {
     const systemMsg = { role: 'system', content: SYSTEM_PROMPT };
     const userMsg = { role: 'user', content: '原文：\n' + text };
-    const res = await fetch(provider.url, {
+    const res = await fetch(PROVIDER.url, {
       method: 'POST',
-      headers: provider.headers(key),
-      body: JSON.stringify(provider.body([systemMsg, userMsg]))
+      headers: PROVIDER.headers(savedKey),
+      body: JSON.stringify(PROVIDER.body([systemMsg, userMsg]))
     });
 
     if (!res.ok) {
@@ -1026,22 +974,22 @@ async function translate2() {
     }
 
     const data = await res.json();
-    const translated = provider.extract(data);
+    const translated = PROVIDER.extract(data);
     if (!translated) throw new Error('API 回傳格式異常');
     resultText.textContent = translated.trim();
     resultDiv.classList.add('show');
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     // Save to history
-    addHistory(text, translated.trim(), provider.name);
+    addHistory(text, translated.trim(), PROVIDER.name);
 
   } catch(e) {
     if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
       showError('🌐 網路連線失敗，請確認網路後重試');
     } else if (e.message.includes('API_KEY_INVALID') || e.message.includes('401') || e.message.includes('Unauthorized')) {
-      showError('🔑 ' + provider.name + ' API 金鑰無效，請在設定中重新輸入');
+      showError('🔑 Perplexity API 金鑰無效，請在設定中重新輸入');
     } else {
-      showError('❌ ' + provider.name + '：' + e.message);
+      showError('❌ Perplexity：' + e.message);
     }
   }
 
@@ -1137,10 +1085,8 @@ function escHtml(s) {
 function toggleSettings() {
   $('settings').classList.toggle('show');
   if ($('settings').classList.contains('show')) {
-    updateProviderUI();
-    $('apikey').value = savedKey[activeProvider] || '';
-    $('apikey').placeholder = PROVIDERS[activeProvider].keyPlaceholder;
-    $('keyLabel').textContent = PROVIDERS[activeProvider].keyLabel;
+    $('apikey').value = savedKey;
+    $('apikey').placeholder = 'pplx-...';
   }
 }
 function closeSettings() { $('settings').classList.remove('show'); }
@@ -1149,53 +1095,15 @@ function toggleKeyVis() {
   el.type = el.type === 'password' ? 'text' : 'password';
 }
 
-function switchProvider(name) {
-  const currentKey = $('apikey').value.trim();
-  if (currentKey) savedKey[activeProvider] = currentKey;
-
-  activeProvider = name;
-  localStorage.setItem('active_provider', name);
-
-  $('apikey').value = savedKey[name] || '';
-  $('apikey').placeholder = PROVIDERS[name].keyPlaceholder;
-  $('keyLabel').textContent = PROVIDERS[name].keyLabel;
-  $('currentProvider').textContent = '使用引擎：' + PROVIDERS[name].name;
-
-  const hints = {
-    gemini: '金鑰僅存在此瀏覽器，直接送至 Gemini API，不會經過第三方伺服器。',
-    agnes: '金鑰僅存在此瀏覽器，每次翻譯請求直接送至 Agnes API，不會經過第三方伺服器。'
-  };
-  document.querySelector('.panel-hint').textContent = hints[name] || '';
-  updateProviderUI();
-  document.getElementById('keyStatus').classList.remove('show');
-}
-
-function updateProviderUI() {
-  document.querySelectorAll('.btn-provider').forEach(b => b.classList.remove('active'));
-  const el = document.getElementById('prov-' + activeProvider);
-  if (el) el.classList.add('active');
-  $('currentProvider').textContent = '使用引擎：' + PROVIDERS[activeProvider].name;
-  $('apikey').placeholder = PROVIDERS[activeProvider].keyPlaceholder;
-  $('keyLabel').textContent = PROVIDERS[activeProvider].keyLabel;
-  updateEngineBadge();
-}
-
-function updateEngineBadge() {
-  const names = { gemini: 'Gemini', agnes: 'Agnes' };
-  $('engineBadge').textContent = names[activeProvider] || 'Gemini';
-}
-
 function saveKey() {
   const key = $('apikey').value.trim();
-  const provider = PROVIDERS[activeProvider];
-  const storageKey = activeProvider + '_api_key';
   if (key) {
-    localStorage.setItem(storageKey, key);
-    savedKey[activeProvider] = key;
-    showKeyStatus('✅ ' + provider.name + ' 金鑰已儲存', 'ok');
+    localStorage.setItem('perplexity_api_key', key);
+    savedKey = key;
+    showKeyStatus('✅ Perplexity 金鑰已儲存', 'ok');
   } else {
-    localStorage.removeItem(storageKey);
-    savedKey[activeProvider] = '';
+    localStorage.removeItem('perplexity_api_key');
+    savedKey = '';
     showKeyStatus('金鑰已清除', 'ok');
   }
   setTimeout(() => closeSettings(), 800);
@@ -1203,17 +1111,16 @@ function saveKey() {
 
 async function verifyKey() {
   const key = $('apikey').value.trim();
-  const provider = PROVIDERS[activeProvider];
   if (!key) { showKeyStatus('請先貼入金鑰', 'fail'); return; }
   showKeyStatus('驗證中...', 'ok');
   try {
     const testMsg = { role: 'user', content: 'ok' };
-    const res = await fetch(provider.url, {
+    const res = await fetch(PROVIDER.url, {
       method: 'POST',
-      headers: provider.headers(key),
-      body: JSON.stringify(provider.body([testMsg]))
+      headers: PROVIDER.headers(key),
+      body: JSON.stringify(PROVIDER.body([testMsg]))
     });
-    if (res.ok) showKeyStatus('✅ ' + provider.name + ' 連線正常', 'ok');
+    if (res.ok) showKeyStatus('✅ Perplexity 連線正常', 'ok');
     else {
       const e = await res.json().catch(()=>({}));
       showKeyStatus('❌ ' + (e.error?.message || e.error?.code || '無效'), 'fail');
@@ -1231,14 +1138,10 @@ function showKeyStatus(msg, type) {
 
 function clearAll() {
   if (!confirm('確定要清除所有資料（含金鑰、快取與翻譯紀錄）？')) return;
-  localStorage.removeItem('gemini_api_key');
-  localStorage.removeItem('agnes_api_key');
-  localStorage.removeItem('active_provider');
+  localStorage.removeItem('perplexity_api_key');
   localStorage.removeItem('trans_history');
-  savedKey = { gemini: '', agnes: '' };
-  activeProvider = 'gemini';
+  savedKey = '';
   $('apikey').value = '';
-  updateProviderUI();
   showKeyStatus('已清除所有資料', 'ok');
   loadHistory();
   if ('caches' in window) {
