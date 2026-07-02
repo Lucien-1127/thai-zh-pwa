@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>แปลไทย → 中文</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'Noto Sans Thai', 'Noto Sans TC', sans-serif;
+  background: #111827; color: #f3f4f6;
+  min-height: 100dvh; display: flex; flex-direction: column;
+}
+header {
+  padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #1f2937;
+}
+header h1 { font-size: 17px; font-weight: 600; letter-spacing: 1px; -webkit-user-select: none; }
+.settings-btn {
+  background: none; border: none; color: #9ca3af; font-size: 24px;
+  cursor: pointer; padding: 4px 8px; -webkit-tap-highlight-color: transparent;
+}
+main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+textarea {
+  width: 100%; min-height: 160px; resize: vertical;
+  background: #1f2937; color: #f3f4f6; border: 1px solid #374151;
+  border-radius: 12px; padding: 16px; font-size: 16px;
+  line-height: 1.6; font-family: inherit; outline: none;
+}
+textarea:focus { border-color: #6366f1; }
+.btn {
+  width: 100%; padding: 14px; border: none; border-radius: 12px;
+  font-size: 17px; font-weight: 600; cursor: pointer; transition: .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { background: #6366f1; color: #fff; }
+.btn-primary:active { transform: scale(0.97); background: #4f46e5; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+#result {
+  background: #1f2937; border-radius: 12px; padding: 16px;
+  min-height: 60px; font-size: 16px; line-height: 1.7; white-space: pre-wrap;
+  display: none; border: 1px solid #374151;
+}
+#result.show { display: block; }
+#loading {
+  display: none; text-align: center; padding: 16px; color: #9ca3af; font-size: 14px;
+}
+#loading.show { display: block; }
+.spinner {
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid #374151; border-top-color: #6366f1;
+  border-radius: 50%; animation: spin .8s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#error { color: #f87171; font-size: 14px; display: none; padding: 10px; border-radius: 8px; background: #1f2937; border: 1px solid #7f1d1d; }
+#error.show { display: block; }
+.footer { text-align: center; padding: 12px; font-size: 12px; color: #6b7280; }
+
+.overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 10; justify-content: center; align-items: flex-end;
+}
+.overlay.show { display: flex; }
+.panel {
+  background: #1f2937; width: 100%; max-width: 500px;
+  border-radius: 16px 16px 0 0; padding: 20px; animation: slideUp .25s ease;
+  max-height: 80vh; overflow-y: auto;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.panel h2 { font-size: 16px; margin-bottom: 16px; color: #d1d5db; }
+.panel label { font-size: 13px; color: #9ca3af; display: block; margin-bottom: 6px; }
+.panel input {
+  width: 100%; padding: 12px; background: #111827; color: #f3f4f6;
+  border: 1px solid #374151; border-radius: 8px; font-size: 14px; outline: none;
+  font-family: monospace;
+}
+.panel input:focus { border-color: #6366f1; }
+.panel .hint { font-size: 12px; color: #6b7280; margin: 8px 0 16px; }
+.panel .row { display: flex; gap: 8px; align-items: center; }
+.panel .row .btn { flex: 1; padding: 10px; font-size: 14px; }
+.btn-secondary { background: #374151; color: #f3f4f6; }
+.status { font-size: 13px; margin-top: 8px; padding: 8px; border-radius: 6px; display: none; }
+.status.show { display: block; }
+.status.ok { background: #064e3b; color: #6ee7b7; }
+.status.fail { background: #450a0a; color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🇹🇭 แปลไทย → 中文 🇹🇼</h1>
+  <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+</header>
+
+<main>
+  <textarea id="input" placeholder="貼上泰文...&#10;วางข้อความภาษาไทยที่นี่"
+    oninput="clearResult()"></textarea>
+  <button class="btn btn-primary" id="btn" onclick="translate2()">翻譯 แปล</button>
+  <div id="loading"><span class="spinner"></span>翻譯中...</div>
+  <div id="error"></div>
+  <div id="result"></div>
+</main>
+
+<div class="footer">กุญแจ API ถูกเก็บไว้ในเครื่องคุณเท่านั้น</div>
+
+<div class="overlay" id="settings">
+  <div class="panel">
+    <h2>⚙️ 設定</h2>
+    <label>Agnes API 金鑰</label>
+    <div class="row">
+      <input type="password" id="apikey" placeholder="cpk-xxxxxxxxxxxxxxxxxxxx" spellcheck="false">
+      <button class="btn btn-secondary" style="flex:0;padding:10px 14px;font-size:13px" onclick="toggleKeyVis()">👁️</button>
+    </div>
+    <div class="hint">金鑰只存在你的瀏覽器 localStorage，不會外傳</div>
+    <div class="row">
+      <button class="btn btn-secondary" onclick="verifyKey()">驗證</button>
+      <button class="btn btn-primary" onclick="saveKey()">儲存</button>
+    </div>
+    <div class="status" id="keyStatus"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
+const MODEL = 'agnes-2.0-flash';
+const SYSTEM = `[ROLE]
+專業泰文翻譯，泰國本地語言專家 → 繁體中文（台灣正體）。
+
+[SCOPE]
+翻譯泰文為自然繁體中文，不含法律條文。
+
+[RULES]
+1. 必須真正懂泰文在地用法（網路語、流行語、方言、皇家用語）
+2. 禁止中式泰文、禁止逐字硬翻
+3. 必須考慮語氣層級轉換
+4. 泰文專有名詞保持音譯 + 中文備註
+5. 翻譯完要像台灣人寫的中文，不是翻譯腔`;
+
+let savedKey = localStorage.getItem('agnes_api_key') || '';
+
+function toggleSettings() {
+  const p = document.getElementById('settings');
+  p.classList.toggle('show');
+  if (p.classList.contains('show'))
+    document.getElementById('apikey').value = savedKey;
+}
+
+function toggleKeyVis() {
+  const el = document.getElementById('apikey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function saveKey() {
+  const key = document.getElementById('apikey').value.trim();
+  if (key) { localStorage.setItem('agnes_api_key', key); savedKey = key; showStatus('✅ 已儲存', 'ok'); }
+  else { localStorage.removeItem('agnes_api_key'); savedKey = ''; showStatus('已清除', 'ok'); }
+}
+
+async function verifyKey() {
+  const key = document.getElementById('apikey').value.trim();
+  if (!key) { showStatus('請填入金鑰', 'fail'); return; }
+  showStatus('驗證中...', 'ok');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key},
+      body: JSON.stringify({model: MODEL, messages: [{role: 'user', content: 'hi'}], max_tokens: 5})
+    });
+    if (res.ok) showStatus('✅ 金鑰有效', 'ok');
+    else showStatus('❌ ' + (await res.json()).error?.message || '金鑰無效', 'fail');
+  } catch(e) { showStatus('連線失敗：' + e.message, 'fail'); }
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('keyStatus');
+  el.textContent = msg; el.className = 'status show ' + type;
+}
+
+let busy = false;
+async function translate2() {
+  if (busy) return;
+  const text = document.getElementById('input').value.trim();
+  if (!text) return;
+  const key = savedKey || localStorage.getItem('agnes_api_key');
+  if (!key) {
+    const err = document.getElementById('error');
+    err.textContent = '⚠️ 請先點 ⚙️ 設定 API 金鑰';
+    err.classList.add('show'); return;
+  }
+  busy = true;
+  const btn = document.getElementById('btn');
+  const loading = document.getElementById('loading');
+  const result = document.getElementById('result');
+  const err = document.getElementById('error');
+  btn.disabled = true; loading.classList.add('show');
+  result.classList.remove('show'); err.classList.remove('show');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key},
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          {role: 'system', content: SYSTEM},
+          {role: 'user', content: '原文：\n' + text}
+        ],
+        temperature: 0.3,
+        max_tokens: 4096
+      })
+    });
+    if (!res.ok) {
+      const e = await res.json();
+      err.textContent = 'API 錯誤：' + (e.error?.message || res.statusText);
+      err.classList.add('show');
+    } else {
+      const data = await res.json();
+      result.textContent = data.choices[0].message.content.trim();
+      result.classList.add('show');
+    }
+  } catch(e) {
+    err.textContent = '連線失敗：' + e.message;
+    err.classList.add('show');
+  }
+  loading.classList.remove('show'); btn.disabled = false; busy = false;
+}
+
+function clearResult() {
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('error').classList.remove('show');
+}
+document.getElementById('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) translate2();
+});
+</script>
+</body>
+</html>

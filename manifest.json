@@ -1,0 +1,17 @@
+{
+  "name": "แปลไทย → 中文",
+  "short_name": "TH↔ZH",
+  "description": "泰文翻譯繁體中文（個人工具）",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
