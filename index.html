@@ -506,32 +506,45 @@ main {
   <div class="app-bar-title">
     🇹🇭 <span class="arrow">→</span> 🇹🇼 中文
   </div>
-  <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span id="engineBadge" style="font-size:11px;background:var(--accent-subtle);color:var(--accent);padding:3px 8px;border-radius:20px;font-weight:500">Gemini</span>
+    <button class="icon-btn" onclick="toggleSettings()" aria-label="設定">⚙️</button>
+  </div>
 </header>
 
 <!-- ===== MAIN ===== -->
 <main>
+  <!-- 首次使用提示 -->
+  <div id="onboarding" style="display:none;background:var(--accent-subtle);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;line-height:1.5;animation:fadeSlideIn .4s ease">
+    ✅ Gemini 金鑰已就緒，貼上泰文即可翻譯！
+    <button onclick="dismissOnboarding()" style="background:none;border:none;color:var(--accent);float:right;font-size:16px;cursor:pointer">✕</button>
+  </div>
+
   <!-- Input -->
   <div class="card input-area">
     <textarea id="input" placeholder="在此貼上泰文..."
       oninput="onInput()"></textarea>
+    <button id="clearBtn" class="input-clear" onclick="clearInput()" style="display:none">✕</button>
     <div class="input-meta" id="charCount">0 字</div>
   </div>
 
-  <!-- Translate Button -->
-  <button class="btn-translate" id="btn" onclick="translate2()">
-    <span class="label">
-      <span>翻譯</span>
-      <span class="shortcut-hint">Ctrl+↵</span>
-    </span>
-  </button>
+  <!-- Action Row -->
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-primary" id="btn" onclick="translate2()" style="flex:1">
+      <span class="label">
+        <span>翻譯</span>
+        <span class="shortcut-hint">Ctrl+↵</span>
+      </span>
+    </button>
+    <button class="btn-sample" onclick="fillSample()" title="試試範例">📝</button>
+  </div>
 
   <!-- Loading -->
   <div id="loading">
     <div class="loading-dots">
       <span></span><span></span><span></span>
     </div>
-    <span>翻譯中...</span>
+    <span>翻譯中... <span id="elapsed" style="font-size:12px;opacity:0.6"></span></span>
   </div>
 
   <!-- Error -->
@@ -539,12 +552,23 @@ main {
 
   <!-- Result -->
   <div id="result">
-    <div class="result-label">翻譯結果</div>
-    <div class="result-text" id="resultText"></div>
-    <div class="result-actions">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="result-label">翻譯結果</div>
       <button class="result-btn" onclick="copyResult()">📋 複製</button>
-      <!-- <button class="result-btn" onclick="speakResult()">🔊 朗讀</button> -->
     </div>
+    <div class="result-text" id="resultText"></div>
+    <div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end">
+      <span style="font-size:11px;color:var(--text-tertiary)" id="resultEngine"></span>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div id="history" style="display:none;margin-top:4px">
+    <button onclick="toggleHistory()" style="background:none;border:none;color:var(--text-tertiary);font-size:13px;cursor:pointer;width:100%;text-align:center;padding:8px">
+      📜 翻譯紀錄 ▾
+    </button>
+    <div id="historyList" style="display:none"></div>
+  </div>
   </div>
 </main>
 

@@ -1,6 +1,6 @@
 {
-  "name": "泰文翻譯 — Thai to Chinese Translator",
-  "short_name": "TH↔ZH",
+  "name": "八方帶財 — Thai to Chinese Translator",
+    "short_name": "八方帶財",
   "description": "泰文翻譯繁體中文 — 專業泰國本地用語，即時翻譯",
   "start_url": "/thai-zh-pwa/",
   "scope": "/thai-zh-pwa/",
